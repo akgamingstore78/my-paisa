@@ -1900,16 +1900,48 @@ textarea {
   box-shadow:var(--shadow-sm);
 }
 .attendance-toolbar{
-  display:flex;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
   align-items:center;
-  justify-content:space-between;
-  gap:12px;
+  gap:16px;
   margin-bottom:10px;
 }
 .attendance-toolbar h3{
   font-size:17px;
   color:#20334f;
+  white-space:nowrap;
 }
+.monthly-attendance-summary{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  min-width:0;
+}
+.monthly-attendance-summary>div{
+  min-width:70px;
+  padding:6px 8px;
+  text-align:center;
+  border:1px solid rgba(78,120,255,.08);
+  border-radius:10px;
+  background:#f8fbff;
+}
+.monthly-attendance-summary span{
+  display:block;
+  color:#8290a5;
+  font-size:7px;
+  font-weight:700;
+}
+.monthly-attendance-summary strong{
+  display:block;
+  margin-top:2px;
+  color:#20334f;
+  font-size:12px;
+}
+.monthly-attendance-summary .monthly-present{color:#1cad74;}
+.monthly-attendance-summary .monthly-absent{color:#ef5369;}
+.monthly-attendance-summary .monthly-leave{color:#f08b29;}
+.monthly-attendance-summary .monthly-holiday{color:#785af0;}
 .calendar-nav{
   display:flex;
   align-items:center;
@@ -2209,13 +2241,37 @@ textarea {
     overflow:hidden;
   }
   .attendance-toolbar{
-    width:100%;
-    min-width:0;
-    margin-bottom:10px;
-  }
-  .attendance-toolbar h3{
-    font-size:14px;
-  }
+  width:100%;
+  min-width:0;
+  grid-template-columns:1fr auto;
+  gap:8px;
+  margin-bottom:10px;
+}
+.attendance-toolbar h3{
+  font-size:14px;
+}
+.monthly-attendance-summary{
+  grid-column:1/-1;
+  order:3;
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:4px;
+  width:100%;
+}
+.monthly-attendance-summary>div{
+  min-width:0;
+  padding:5px 2px;
+  border-radius:8px;
+}
+.monthly-attendance-summary span{
+  font-size:5.5px;
+}
+.monthly-attendance-summary strong{
+  font-size:10px;
+}
+.calendar-nav{
+  justify-self:end;
+}
   .attendance-legend{
     width:100%;
     min-width:0;
@@ -5947,8 +6003,13 @@ function renderAttendancePage(){
   const section=document.getElementById("sectionView");
   const monthName=new Date(attendanceYear,attendanceMonth,1).toLocaleDateString("en-IN",{month:"long",year:"numeric"});
   const factoryDays=attendanceAllRows.filter(row=>row.status!=="holiday").length;
-const presentDays=attendanceAllRows.filter(row=>row.status==="present").length;
-const absentDays=attendanceAllRows.filter(row=>row.status==="absent"||row.status==="leave").length;
+  const presentDays=attendanceAllRows.filter(row=>row.status==="present").length;
+  const absentDays=attendanceAllRows.filter(row=>row.status==="absent"||row.status==="leave").length;
+  const monthlyFactoryDays=attendanceRows.filter(row=>row.status!=="holiday").length;
+  const monthlyPresent=attendanceRows.filter(row=>row.status==="present").length;
+  const monthlyAbsent=attendanceRows.filter(row=>row.status==="absent").length;
+  const monthlyLeave=attendanceRows.filter(row=>row.status==="leave").length;
+  const monthlyHoliday=attendanceRows.filter(row=>row.status==="holiday").length;
   const joinDate=new Date(2026,8,7);
   const today=new Date();
   today.setHours(0,0,0,0);
@@ -5986,6 +6047,28 @@ const absentDays=attendanceAllRows.filter(row=>row.status==="absent"||row.status
     <div class="attendance-shell">
      <div class="attendance-toolbar">
   <h3>${monthName}</h3>
+  <div class="monthly-attendance-summary">
+    <div>
+      <span>Factory Days</span>
+      <strong>${monthlyFactoryDays}</strong>
+    </div>
+    <div>
+      <span>Worked</span>
+      <strong class="monthly-present">${monthlyPresent}</strong>
+    </div>
+    <div>
+      <span>Absent</span>
+      <strong class="monthly-absent">${monthlyAbsent}</strong>
+    </div>
+    <div>
+      <span>Leave</span>
+      <strong class="monthly-leave">${monthlyLeave}</strong>
+    </div>
+    <div>
+      <span>Holiday</span>
+      <strong class="monthly-holiday">${monthlyHoliday}</strong>
+    </div>
+  </div>
   <div class="calendar-nav">
     <button class="bulk-attendance-btn" onclick="window.openBulkAttendance()" aria-label="Bulk attendance"><i data-lucide="list-checks"></i><span>Bulk</span></button>
     <button onclick="changeAttendanceMonth(-1)" aria-label="Previous month"><i data-lucide="chevron-left"></i></button>
