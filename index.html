@@ -2705,6 +2705,44 @@ textarea {
 .report-action-btn.primary{border:0;color:#fff;background:linear-gradient(115deg,#20bfbf,#4e78ff 58%,#8068f5)}
 .report-action-btn.dark{border:0;color:#fff;background:#20324d}
 .report-action-btn svg{width:14px;height:14px}
+.full-report-overlay{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(27,43,68,.36);backdrop-filter:blur(10px)}
+.full-report-view{width:min(1180px,100%);max-height:calc(100vh - 40px);display:flex;flex-direction:column;border-radius:22px;background:#fff;box-shadow:0 30px 80px rgba(28,48,79,.22);overflow:hidden}
+.full-report-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 18px;border-bottom:1px solid #e6edf6;background:#fff}
+.full-report-top h3{font-size:17px;color:#20324d}
+.full-report-top small{display:block;margin-top:3px;color:#8290a5;font-size:10px}
+.full-report-top-actions{display:flex;gap:7px}
+.full-report-icon-btn{width:38px;height:38px;display:grid;place-items:center;border:1px solid #dfe7f2;border-radius:11px;background:#fff;color:#405571}
+.full-report-icon-btn.download{color:#15926b;background:#ecfff7;border-color:#ccefe1}
+.full-report-icon-btn svg{width:17px;height:17px}
+.full-report-body{overflow:auto;padding:18px;background:#f8fbff}
+.full-report-summary{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin-bottom:16px}
+.full-report-summary div{padding:13px;border-radius:14px;background:#fff;border:1px solid #e8eef6}
+.full-report-summary span{display:block;color:#8090a5;font-size:9px;margin-bottom:6px}
+.full-report-summary strong{font-size:16px;color:#20324d}
+.full-report-summary .red strong{color:#ef5369}
+.full-report-summary .purple strong{color:#785af0}
+.full-report-summary .green strong{color:#15926b}
+.full-report-table-wrap{overflow:auto;border:1px solid #e5ebf3;border-radius:15px;background:#fff}
+.full-report-table{width:100%;min-width:850px;border-collapse:collapse}
+.full-report-table th{padding:12px 13px;text-align:left;background:#f2f6fb;color:#60718d;font-size:10px;text-transform:uppercase;white-space:nowrap}
+.full-report-table td{padding:13px;border-top:1px solid #edf1f6;color:#293c57;font-size:12px;white-space:nowrap}
+.full-report-income{color:#15926b!important;font-weight:800}
+.full-report-out{color:#ef5369!important;font-weight:800}
+@media(max-width:780px){
+.full-report-overlay{padding:8px}
+.full-report-view{max-height:calc(100vh - 16px);border-radius:16px}
+.full-report-top{padding:11px 12px}
+.full-report-top h3{font-size:14px}
+.full-report-top small{font-size:8px}
+.full-report-icon-btn{width:34px;height:34px}
+.full-report-body{padding:10px}
+.full-report-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.full-report-summary div{padding:9px}
+.full-report-summary span{font-size:7px}
+.full-report-summary strong{font-size:12px}
+.full-report-table th{font-size:9px}
+.full-report-table td{font-size:11px}
+}
 .report-chart{height:265px;padding:20px 16px 14px;display:flex;align-items:flex-end;justify-content:space-around;gap:8px}
 .report-chart-item{height:100%;flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:7px;min-width:0}
 .report-chart-track{width:min(42px,70%);height:190px;display:flex;align-items:flex-end;border-radius:12px;background:#f1f4f9;overflow:hidden}
@@ -7289,8 +7327,9 @@ ${reportFilterType==="range"?`<input type="date" value="${reportStartDate}" onch
 <div class="report-line total"><span>Net monthly cash change</span><strong>${formatMoney(netCash)}</strong></div>
 <div class="report-line"><span>Employer PF (not cash deduction)</span><strong>${formatMoney(employerPF)}</strong></div>
 <div class="report-actions">
-<button class="report-action-btn primary" onclick="downloadFilteredReportPDF()"><i data-lucide="file-down"></i> Report PDF</button>
-<button class="report-action-btn" onclick="downloadFilteredReportCSV()"><i data-lucide="download"></i> Period CSV</button>
+<button class="report-action-btn primary" onclick="openFullReportView()"><i data-lucide="eye"></i> View Report</button>
+<button class="report-action-btn" onclick="downloadFilteredReportPDF()"><i data-lucide="download"></i> Report PDF</button>
+<button class="report-action-btn" onclick="downloadFilteredReportCSV()"><i data-lucide="file-spreadsheet"></i> Period CSV</button>
 <button class="report-action-btn dark" onclick="downloadAllTransactionsCSV()"><i data-lucide="database"></i> All Transactions</button>
 </div>
 </div>
@@ -7334,6 +7373,74 @@ lucide.createIcons();
 function changeReportFilterType(type){
 reportFilterType=type;
 renderReportsPage();
+}
+function openFullReportView(){
+const old=document.getElementById("fullReportOverlay");
+if(old)old.remove();
+const{salaryData,otherData,expenseData,savingData}=getFilteredReportData();
+const salaryTotal=salaryData.reduce((sum,row)=>sum+Number(row.amount||0),0);
+const otherTotal=otherData.reduce((sum,row)=>sum+Number(row.amount||0),0);
+const expenseTotal=expenseData.reduce((sum,row)=>sum+Number(row.amount||0),0);
+const savingTotal=savingData.reduce((sum,row)=>sum+Number(row.amount||0),0);
+const employeePF=salaryData.reduce((sum,row)=>sum+(row.pf_enabled===false?0:Number(row.pf_deduction||0)),0);
+const employerPF=salaryData.reduce((sum,row)=>sum+(row.pf_enabled===false?0:Number(row.employer_pf||0)),0);
+const totalIncome=salaryTotal+otherTotal;
+const net=totalIncome-expenseTotal-savingTotal;
+const title=reportFilterType==="month"?formatSalaryMonth(reportMonth):reportFilterType==="year"?reportYear:`${reportStartDate?formatDate(reportStartDate):"Start"} - ${reportEndDate?formatDate(reportEndDate):"End"}`;
+const entries=[];
+salaryData.forEach(row=>entries.push({date:row.salary_date,type:"Salary",source:row.company_name||"MUNITIONS INDIA LTD",note:row.note||"-",amount:Number(row.amount||0),direction:"in"}));
+otherData.forEach(row=>entries.push({date:row.income_date,type:"Other Income",source:row.source||"Other Income",note:row.note||"-",amount:Number(row.amount||0),direction:"in"}));
+expenseData.forEach(row=>entries.push({date:row.expense_date,type:"Expense",source:row.category||"Expense",note:row.note||"-",amount:Number(row.amount||0),direction:"out"}));
+savingData.forEach(row=>entries.push({date:row.saving_date,type:"Saving",source:row.source||"Saving",note:row.note||"-",amount:Number(row.amount||0),direction:"out"}));
+entries.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+const overlay=document.createElement("div");
+overlay.id="fullReportOverlay";
+overlay.className="full-report-overlay";
+overlay.innerHTML=`
+<div class="full-report-view" onclick="event.stopPropagation()">
+<div class="full-report-top">
+<div><h3>Complete Financial Report</h3><small>${title}</small></div>
+<div class="full-report-top-actions">
+<button class="full-report-icon-btn download" onclick="downloadFilteredReportPDF()" title="Download PDF"><i data-lucide="download"></i></button>
+<button class="full-report-icon-btn" onclick="closeFullReportView()" title="Close"><i data-lucide="x"></i></button>
+</div>
+</div>
+<div class="full-report-body">
+<div class="full-report-summary">
+<div><span>Salary</span><strong>${formatMoney(salaryTotal)}</strong></div>
+<div><span>Other Income</span><strong>${formatMoney(otherTotal)}</strong></div>
+<div class="red"><span>Expenses</span><strong>${formatMoney(expenseTotal)}</strong></div>
+<div class="purple"><span>Savings</span><strong>${formatMoney(savingTotal)}</strong></div>
+<div><span>Employee PF</span><strong>${formatMoney(employeePF)}</strong></div>
+<div class="green"><span>Available / Net</span><strong>${formatMoney(net)}</strong></div>
+</div>
+<div class="report-card" style="margin-bottom:16px">
+<div class="report-card-head"><div><h3>PF Summary</h3><small>Selected period</small></div></div>
+<div class="report-statement-body">
+<div class="report-line"><span>Employee PF</span><strong>${formatMoney(employeePF)}</strong></div>
+<div class="report-line"><span>Employer PF</span><strong>${formatMoney(employerPF)}</strong></div>
+<div class="report-line total"><span>Total PF Contribution</span><strong>${formatMoney(employeePF+employerPF)}</strong></div>
+</div>
+</div>
+<div class="full-report-table-wrap">
+<table class="full-report-table">
+<thead><tr><th>Date</th><th>Type</th><th>Source / Category</th><th>Note</th><th>Amount</th></tr></thead>
+<tbody>
+${entries.length?entries.map(row=>`<tr><td>${formatDate(row.date)}</td><td><strong>${row.type}</strong></td><td>${escapeHTML(row.source)}</td><td>${escapeHTML(row.note)}</td><td class="${row.direction==="in"?"full-report-income":"full-report-out"}">${row.direction==="out"?"-":"+"}${formatMoney(row.amount)}</td></tr>`).join(""):`<tr><td colspan="5" class="report-empty">No records found for selected period.</td></tr>`}
+</tbody>
+</table>
+</div>
+</div>
+</div>`;
+overlay.onclick=closeFullReportView;
+document.body.appendChild(overlay);
+document.body.style.overflow="hidden";
+lucide.createIcons();
+}
+function closeFullReportView(){
+const overlay=document.getElementById("fullReportOverlay");
+if(overlay)overlay.remove();
+document.body.style.overflow="";
 }
 function getFilteredReportData(){
 const getDate=row=>row.salary_date||row.income_date||row.expense_date||row.saving_date||"";
