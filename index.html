@@ -21,6 +21,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
 
   <style>
     * {
@@ -2419,6 +2421,98 @@ textarea {
 .page-action:hover {
   transform: translateY(-2px);
 }
+.other-income-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+}
+.other-income-month-select{
+  height:44px;
+  min-width:125px;
+  padding:0 34px 0 14px;
+  border:1px solid #dbe5f1;
+  border-radius:13px;
+  outline:none;
+  background:#fff;
+  color:#20324d;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow:0 8px 20px rgba(35,56,96,.05);
+}
+.other-income-month-select:focus{
+  border-color:#91aaff;
+  box-shadow:0 0 0 4px rgba(78,120,255,.08);
+}
+.other-income-stats{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-bottom:18px;
+}
+.other-income-stat{
+  min-width:0;
+  min-height:92px;
+  padding:14px;
+  text-align:left;
+  border:1px solid var(--border);
+  border-radius:18px;
+  background:rgba(255,255,255,.88);
+  box-shadow:var(--shadow-sm);
+  color:#20324d;
+  transition:.2s ease;
+}
+.other-income-stat:hover{
+  transform:translateY(-2px);
+  border-color:rgba(78,120,255,.25);
+}
+.other-income-stat.active{
+  border-color:#8ca7ff;
+  box-shadow:0 0 0 3px rgba(78,120,255,.08);
+}
+.other-income-stat small{
+  display:block;
+  color:#8290a5;
+  font-size:9px;
+  font-weight:600;
+  margin-bottom:8px;
+}
+.other-income-stat strong{
+  display:block;
+  font-size:20px;
+  color:#20324d;
+  white-space:nowrap;
+}
+.other-income-stat.expense strong{
+  color:#ef5369;
+}
+.other-income-stat.saving strong{
+  color:#785af0;
+}
+.other-income-history .data-table th{
+  font-size:11px;
+  font-weight:700;
+  color:#71819a;
+}
+.other-income-history .data-table td{
+  font-size:13px;
+  font-weight:500;
+  color:#32445f;
+}
+.other-income-history .data-table td strong{
+  font-size:13px;
+  font-weight:700;
+  color:#1d304d;
+}
+.other-income-history .amount-green{
+  font-size:13px;
+}
+.other-income-empty{
+  text-align:center;
+  padding:28px!important;
+  color:#8a97aa!important;
+}
 
 .section-stats {
   display: grid;
@@ -2576,7 +2670,89 @@ textarea {
   overflow-wrap: anywhere;
 }
 
-.report-bar {
+.report-bar{margin-top:10px;height:10px;overflow:hidden;border-radius:999px;background:#edf2f8}
+.report-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,#38bdf8,#4e78ff,#8068f5)}
+.report-head{align-items:flex-end}
+.report-filter-box{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.report-filter-box select,.report-filter-box input{height:42px;padding:0 12px;border:1px solid #dfe7f2;border-radius:12px;background:#fff;color:#263852;font-size:11px;outline:none}
+.report-filter-box input:focus,.report-filter-box select:focus{border-color:#8fa8ff;box-shadow:0 0 0 3px rgba(78,120,255,.08)}
+.report-summary-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.report-summary-card{min-height:105px;padding:15px;border:1px solid rgba(78,120,255,.09);border-radius:17px;background:rgba(255,255,255,.9);box-shadow:var(--shadow-sm)}
+.report-summary-card small{display:block;color:#8290a5;font-size:9px;font-weight:600;margin-bottom:9px}
+.report-summary-card strong{display:block;color:#20324d;font-size:20px;letter-spacing:-.5px}
+.report-summary-card.salary{background:linear-gradient(135deg,#ecfff6,#f7fffb)}
+.report-summary-card.other{background:linear-gradient(135deg,#eafcff,#f4ffff)}
+.report-summary-card.expense{background:linear-gradient(135deg,#fff1f3,#fff8f9)}
+.report-summary-card.saving{background:linear-gradient(135deg,#f1efff,#faf9ff)}
+.report-summary-card.pf{background:linear-gradient(135deg,#eef4ff,#f8fbff)}
+.report-summary-card.net{background:linear-gradient(135deg,#e9fff7,#eef7ff)}
+.report-summary-card.expense strong{color:#ec536a}
+.report-summary-card.saving strong{color:#785af0}
+.report-summary-card.pf strong{color:#396cf5}
+.report-summary-card.net strong{color:#139765}
+.report-main-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(300px,.8fr);gap:16px;margin-bottom:16px}
+.report-card{border:1px solid rgba(78,120,255,.09);border-radius:20px;background:rgba(255,255,255,.9);box-shadow:var(--shadow-sm);overflow:hidden}
+.report-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px;border-bottom:1px solid rgba(77,96,133,.09)}
+.report-card-head h3{font-size:14px;color:#20324d}
+.report-card-head small{color:#8a97aa;font-size:9px}
+.report-statement-body{padding:8px 18px 16px}
+.report-line{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:11px 2px;border-bottom:1px solid rgba(77,96,133,.08);font-size:11px;color:#67758b}
+.report-line strong{color:#20324d;font-size:12px}
+.report-line.total{margin-top:3px;border-top:1px solid #dce4ef;font-weight:700}
+.report-line.total strong{color:#139765;font-size:14px}
+.report-actions{display:flex;gap:7px;flex-wrap:wrap;padding-top:13px}
+.report-action-btn{height:38px;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid #dfe7f2;border-radius:11px;background:#fff;color:#30435e;font-size:10px;font-weight:700}
+.report-action-btn.primary{border:0;color:#fff;background:linear-gradient(115deg,#20bfbf,#4e78ff 58%,#8068f5)}
+.report-action-btn.dark{border:0;color:#fff;background:#20324d}
+.report-action-btn svg{width:14px;height:14px}
+.report-chart{height:265px;padding:20px 16px 14px;display:flex;align-items:flex-end;justify-content:space-around;gap:8px}
+.report-chart-item{height:100%;flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:7px;min-width:0}
+.report-chart-track{width:min(42px,70%);height:190px;display:flex;align-items:flex-end;border-radius:12px;background:#f1f4f9;overflow:hidden}
+.report-chart-bar{width:100%;min-height:4px;border-radius:10px 10px 0 0;transition:.35s}
+.report-chart-bar.salary{background:linear-gradient(#56d9a8,#25b77c)}
+.report-chart-bar.other{background:linear-gradient(#53dce3,#1aa8bc)}
+.report-chart-bar.expense{background:linear-gradient(#ff8c9c,#ef5369)}
+.report-chart-bar.saving{background:linear-gradient(#aa96ff,#785af0)}
+.report-chart-bar.pf{background:linear-gradient(#79a1ff,#396cf5)}
+.report-chart-item strong{font-size:9px;color:#334762;white-space:nowrap}
+.report-chart-item span{font-size:8px;color:#8592a5;text-align:center;white-space:nowrap}
+.report-slip-card{margin-bottom:16px}
+.report-slip-wrap{overflow-x:auto}
+.report-slip-table{width:100%;min-width:820px;border-collapse:collapse}
+.report-slip-table th{padding:12px 14px;text-align:left;background:#f7faff;color:#71819a;font-size:9px;text-transform:uppercase;letter-spacing:.5px}
+.report-slip-table td{padding:13px 14px;border-top:1px solid rgba(77,96,133,.08);font-size:11px;color:#334762;white-space:nowrap}
+.report-slip-table td strong{font-size:11px;color:#20324d}
+.report-slip-actions{display:flex;gap:5px}
+.report-empty{text-align:center!important;color:#8a97aa!important;padding:30px!important}
+@media(max-width:1080px){
+.report-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.report-main-grid{grid-template-columns:1fr}
+}
+@media(max-width:780px){
+.report-head{gap:12px}
+.report-filter-box{width:100%;display:grid;grid-template-columns:1fr 1fr}
+.report-filter-box select,.report-filter-box input{width:100%;height:38px;font-size:9px}
+.report-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.report-summary-card{min-height:82px;padding:9px;border-radius:13px}
+.report-summary-card small{font-size:7px;margin-bottom:5px}
+.report-summary-card strong{font-size:13px}
+.report-main-grid{gap:10px}
+.report-card{border-radius:15px}
+.report-card-head{padding:12px}
+.report-card-head h3{font-size:12px}
+.report-statement-body{padding:5px 12px 12px}
+.report-line{padding:8px 0;font-size:9px}
+.report-line strong{font-size:10px}
+.report-line.total strong{font-size:12px}
+.report-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.report-action-btn{height:34px;padding:0 6px;font-size:7px}
+.report-chart{height:205px;padding:14px 5px 10px;gap:3px}
+.report-chart-track{height:145px;width:min(30px,75%)}
+.report-chart-item strong{font-size:7px}
+.report-chart-item span{font-size:6.5px}
+.report-slip-table th{font-size:8px}
+.report-slip-table td,.report-slip-table td strong{font-size:10px}
+}.report-bar {
   margin-top: 10px;
   height: 10px;
   overflow: hidden;
@@ -2601,6 +2777,63 @@ textarea {
     align-items: flex-start;
     flex-direction: column;
   }
+  .other-income-head{
+    gap:12px;
+  }
+  .other-income-actions{
+    width:100%;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:8px;
+  }
+  .other-income-month-select{
+    width:100%;
+    min-width:0;
+    height:42px;
+    font-size:11px;
+  }
+  .other-income-actions .page-action{
+    min-height:42px;
+    padding:0 12px;
+    white-space:nowrap;
+  }
+  .other-income-history .data-table th{
+    font-size:10px;
+  }
+  .other-income-history .data-table td,
+  .other-income-history .data-table td strong,
+  .other-income-history .amount-green{
+    font-size:12px;
+  }
+  .other-income-stats{
+  width:100%;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:5px;
+  margin-bottom:10px;
+}
+.other-income-stat{
+  width:100%;
+  min-height:0;
+  aspect-ratio:1/1;
+  padding:7px 5px;
+  border-radius:12px;
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+.other-income-stat small{
+  font-size:5.8px;
+  line-height:1.15;
+  margin-bottom:5px;
+  white-space:normal;
+}
+.other-income-stat strong{
+  font-size:11px;
+  line-height:1.1;
+  letter-spacing:-.4px;
+}
   .section-stats {
     grid-template-columns: repeat(3,minmax(0,1fr));
     gap:6px;
@@ -2700,26 +2933,51 @@ textarea {
 .transaction-search input{width:100%;height:100%;border:0;outline:0;background:transparent;color:#263852;font-size:11px}
 .ledger-card{padding:20px;border-radius:22px;border:1px solid var(--border);background:rgba(255,255,255,.88);box-shadow:var(--shadow-sm)}
 .ledger-table-wrap{width:100%;overflow:auto}
-.ledger-table{width:100%;min-width:820px;border-collapse:collapse}
-.ledger-table th{padding:12px 13px;text-align:left;background:#f7faff;color:#8190a5;font-size:9px;text-transform:uppercase;letter-spacing:.5px}
-.ledger-table td{padding:14px 13px;border-top:1px solid rgba(75,98,136,.08);color:#40516b;font-size:10px;vertical-align:middle}
-.ledger-category{display:block;color:#263852;font-size:10px}
-.ledger-table td small{display:block;margin-top:4px;color:#8a97aa;font-size:8px}
-.ledger-badge{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:8px;font-weight:800}
-.ledger-amount{font-weight:800;white-space:nowrap}
+.ledger-table{width:100%;min-width:760px;border-collapse:collapse}
+.ledger-table.salary-ledger-mode{width:max-content;min-width:2600px}
+.ledger-table th{padding:13px 15px;text-align:left;background:#f7faff;color:#74839a;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.45px;white-space:nowrap}
+.ledger-table td{padding:16px 15px;border-top:1px solid rgba(75,98,136,.08);color:#33445f;font-size:12px;font-weight:500;vertical-align:middle;white-space:nowrap}
+.ledger-category{display:block;color:#20334f;font-size:12px;font-weight:700}
+.ledger-table td small{display:block;margin-top:4px;color:#7f8da2;font-size:10px}
+.ledger-badge{display:inline-flex;padding:6px 10px;border-radius:999px;font-size:10px;font-weight:800}
+.ledger-amount{font-size:12px;font-weight:800;white-space:nowrap}
 .all-type-salary{color:#169866;background:#e9fbf3}
 .all-type-expense{color:#e15167;background:#fff0f2}
 .all-type-saving{color:#7059e5;background:#f0edff}
-.ledger-delete-btn{height:34px;padding:0 12px;border:1px solid #ffd8de;border-radius:10px;background:#fff;color:#e15167;font-size:9px;font-weight:800}
+.ledger-delete-btn{height:36px;padding:0 14px;border:1px solid #ffd8de;border-radius:10px;background:#fff;color:#e15167;font-size:10px;font-weight:800}
 .ledger-delete-btn:hover{background:#fff0f2}
 .transaction-empty{padding:40px 15px;text-align:center;color:#8a97aa}
 .transaction-empty svg{width:28px;height:28px;margin:0 auto 9px}
 .transaction-empty strong{display:block;color:#50617c;font-size:12px}
 .transaction-empty span{display:block;margin-top:4px;font-size:9px}
-.pf-placeholder{padding:42px 20px;text-align:center;border:1px solid rgba(78,120,255,.10);border-radius:22px;background:rgba(255,255,255,.88);box-shadow:var(--shadow-sm)}
-.pf-placeholder-icon{width:52px;height:52px;margin:0 auto 12px;display:grid;place-items:center;border-radius:16px;color:#079ba6;background:#e7fbfc}
-.pf-placeholder strong{display:block;color:#263852;font-size:14px}
-.pf-placeholder p{max-width:540px;margin:7px auto 0;color:#8190a5;font-size:10px;line-height:1.6}
+.pf-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.pf-summary-card{min-height:120px;padding:17px;border:1px solid rgba(78,120,255,.10);border-radius:19px;background:rgba(255,255,255,.90);box-shadow:var(--shadow-sm)}
+.pf-summary-card small{display:block;color:#8190a5;font-size:10px;font-weight:600;margin-bottom:10px}
+.pf-summary-card strong{display:block;color:#20324d;font-size:24px;letter-spacing:-.7px}
+.pf-summary-card.employee strong{color:#396cf5}
+.pf-summary-card.employer strong{color:#785af0}
+.pf-summary-card.interest strong{color:#079ba6}
+.pf-table-card{border:1px solid rgba(78,120,255,.10);border-radius:20px;background:rgba(255,255,255,.90);box-shadow:var(--shadow-sm);overflow:hidden}
+.pf-table-head{padding:17px 19px;border-bottom:1px solid rgba(77,96,133,.10)}
+.pf-table-head h3{font-size:14px;color:#20324d}
+.pf-table-wrap{width:100%;overflow-x:auto}
+.pf-table{width:100%;min-width:920px;border-collapse:collapse}
+.pf-table th{padding:13px 15px;text-align:left;background:#f6f9fd;color:#71819a;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.pf-table td{padding:15px;color:#32445f;font-size:12px;border-top:1px solid rgba(77,96,133,.08);white-space:nowrap}
+.pf-table td strong{font-size:12px;color:#20324d}
+.pf-empty{padding:35px!important;text-align:center;color:#8a97aa!important}
+@media(max-width:780px){
+.pf-summary-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-bottom:10px}
+.pf-summary-card{min-height:0;aspect-ratio:1/1;padding:7px 4px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.pf-summary-card small{font-size:6px;line-height:1.15;margin-bottom:5px}
+.pf-summary-card strong{font-size:11px;letter-spacing:-.3px}
+.pf-table-card{border-radius:15px}
+.pf-table-head{padding:12px 13px}
+.pf-table-head h3{font-size:12px}
+.pf-table{min-width:760px}
+.pf-table th{font-size:8px;padding:10px}
+.pf-table td,.pf-table td strong{font-size:10px;padding:11px 10px}
+}
 @media(max-width:780px){
 .ledger-head{align-items:flex-start}
 .ledger-head h2{font-size:19px}
@@ -2730,15 +2988,92 @@ textarea {
 .transaction-search{height:40px}
 .transaction-search input{font-size:9px}
 .ledger-card{padding:8px;border-radius:16px}
-.ledger-table{min-width:690px}
-.ledger-table th{padding:9px 8px;font-size:7px}
-.ledger-table td{padding:10px 8px;font-size:8px}
-.ledger-category{font-size:8px}
-.ledger-table td small{font-size:7px}
-.ledger-delete-btn{height:30px;padding:0 9px;font-size:7px}
+.ledger-table{min-width:700px}
+.ledger-table.salary-ledger-mode{min-width:2600px}
+.ledger-table th{padding:10px 10px;font-size:9px}
+.ledger-table td{padding:12px 10px;font-size:10px}
+.ledger-category{font-size:10px}
+.ledger-table td small{font-size:8.5px}
+.ledger-badge{font-size:9px;padding:5px 8px}
+.ledger-amount{font-size:10px}
+.ledger-delete-btn{height:32px;padding:0 10px;font-size:9px}
 }
+.salary-net-box{display:flex;align-items:center;justify-content:space-between;margin:4px 0 15px;padding:14px 15px;border-radius:14px;background:linear-gradient(135deg,#e9fff5,#edf5ff);border:1px solid rgba(48,201,139,.15)}
+.salary-net-box span{color:#60718a;font-size:11px;font-weight:700}
+.salary-net-box strong{color:#169866;font-size:20px}
+@media(max-width:560px){#salaryFields .form-grid{grid-template-columns:1fr 1fr;gap:7px}#salaryFields .form-group{margin-bottom:8px}#salaryFields .form-control{min-height:40px;font-size:9px}.salary-net-box{padding:10px 11px;margin-bottom:10px}.salary-net-box strong{font-size:16px}}
+.salary-modal-card{width:min(92vw,640px);max-height:90vh;padding:18px}
+.salary-modal-card .modal-header{margin-bottom:12px}
+.salary-modal-card .modal-header h3{font-size:18px}
+.salary-section-title{margin:5px 0 10px;padding-bottom:6px;border-bottom:1px solid #e8eef6;color:#29405f;font-size:12px;font-weight:800}
+.salary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:0 10px}
+.salary-modal-card .form-group{margin-bottom:10px}
+.salary-modal-card .form-group label{margin-bottom:5px;font-size:10px}
+.salary-modal-card .form-control{min-height:40px;padding:0 10px;border-radius:10px;font-size:11px}
+.salary-sub-input{margin-top:5px}
+.salary-net-box{display:flex;align-items:center;justify-content:space-between;margin:3px 0 11px;padding:10px 12px;border:1px solid rgba(48,201,139,.15);border-radius:11px;background:linear-gradient(135deg,#e9fff5,#edf5ff)}
+.salary-net-box span{color:#60718a;font-size:10px;font-weight:700}
+.salary-net-box strong{color:#169866;font-size:18px}
+.salary-modal-card .submit-btn{height:42px;border-radius:10px;font-size:11px;position:static;margin-top:10px;box-shadow:0 10px 22px rgba(78,120,255,.18)}
+.salary-edit-btn{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 9px;border:1px solid #dce6f5;border-radius:9px;background:#fff;color:#4e78ff;font-size:9px;font-weight:800}
+.salary-edit-btn svg{width:12px;height:12px}
+@media(max-width:780px){.salary-modal-card{width:min(94vw,560px);padding:14px}.salary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:0 8px}.salary-modal-card .form-group label{font-size:9px}.salary-modal-card .form-control{min-height:38px;font-size:10px}}
+@media(max-width:560px){.salary-modal-card{width:94vw;max-height:92vh;padding:12px;border-radius:16px}.salary-modal-card .modal-header{margin-bottom:9px}.salary-modal-card .modal-header h3{font-size:15px}.salary-grid{grid-template-columns:1fr;gap:0}.salary-grid .form-group{margin-bottom:8px}.salary-grid .form-control{min-height:38px;padding:0 9px;font-size:10px}.salary-grid .form-group label{font-size:9px;margin-bottom:4px}.salary-section-title{margin:3px 0 8px;padding-bottom:5px;font-size:10px}.salary-net-box{padding:9px 10px;margin-bottom:9px}.salary-net-box span{font-size:9px}.salary-net-box strong{font-size:16px}.salary-modal-card .submit-btn{height:40px;font-size:10px}}
+.salary-slip-actions{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.salary-slip-btn{height:30px;display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:0 9px;border-radius:9px;font-size:8px;font-weight:800}
+.salary-slip-btn svg{width:12px;height:12px}
+.salary-slip-btn.view{border:1px solid #dce6f5;background:#fff;color:#4e78ff}
+.salary-slip-btn.download{border:1px solid #d8f0e5;background:#effbf5;color:#169866}
+.salary-slip-btn.delete{border:1px solid #ffd8de;background:#fff5f6;color:#e15167}
+@media(max-width:560px){.salary-slip-actions{gap:4px}.salary-slip-btn{height:28px;padding:0 7px;font-size:7px}.salary-slip-btn svg{width:10px;height:10px}}
 
-  </style>
+.salary-history-card{overflow:hidden}
+.salary-history-wrap{width:100%;overflow-x:auto}
+.salary-history-table{width:max-content;min-width:2600px;border-collapse:collapse}
+.salary-history-table th{padding:13px 15px;text-align:left;background:#f7faff;color:#74839a;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.45px;white-space:nowrap}
+.salary-history-table td{padding:16px 15px;border-top:1px solid rgba(75,98,136,.08);color:#33445f;font-size:12px;font-weight:500;vertical-align:middle;white-space:nowrap}
+.salary-history-table .amount-green{color:#169866;font-size:12px;font-weight:800}
+.salary-history-table .salary-slip-btn{font-size:10px}
+@media(max-width:780px){.salary-history-table{min-width:2600px}.salary-history-table th{padding:10px;font-size:9px}.salary-history-table td{padding:12px 10px;font-size:10px}.salary-history-table .amount-green{font-size:10px}}
+
+.salary-slip-overlay{position:fixed;inset:0;z-index:5000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(30,45,70,.45);backdrop-filter:blur(8px)}
+.salary-slip-window{width:min(94vw,820px);max-height:94vh;overflow:auto;border-radius:18px;background:#eef3f9;box-shadow:0 25px 70px rgba(22,40,70,.25)}
+.salary-slip-toolbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#fff;border-bottom:1px solid #e2e8f0}
+.salary-slip-toolbar strong{font-size:14px;color:#1e2f49;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.salary-slip-toolbar-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.salary-slip-toolbar button{height:36px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 12px;border:1px solid #dce5f0;border-radius:10px;background:#fff;color:#40516b;font-size:10px;font-weight:800;white-space:nowrap}
+.salary-slip-toolbar button svg{width:15px;height:15px}
+.salary-slip-toolbar .slip-download{background:#eefbf5;color:#168d61;border-color:#d3efe2}
+@media(max-width:560px){.salary-slip-toolbar{padding:9px 10px;gap:6px}.salary-slip-toolbar strong{font-size:10px}.salary-slip-toolbar-actions{gap:5px}.salary-slip-toolbar button{width:34px;height:34px;padding:0;font-size:0}.salary-slip-toolbar button svg{width:16px;height:16px}}
+.salary-slip-document{width:100%;max-width:760px;margin:18px auto;padding:30px;background:#fff;color:#1e293b;font-family:Arial,sans-serif}
+.slip-header{text-align:center;padding-bottom:14px;border-bottom:2px solid #1e3a5f}
+.slip-header h1{font-size:23px;letter-spacing:.4px;margin:0;color:#152c49}
+.slip-header h2{margin:6px 0 0;font-size:15px;color:#344b68}
+.slip-header p{margin:5px 0 0;font-size:11px;color:#66758a}
+.slip-title{margin:15px 0 10px;text-align:center;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.8px}
+.slip-info-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #cfd8e5;border-bottom:0}
+.slip-info-item{display:grid;grid-template-columns:135px 1fr;min-height:34px;border-bottom:1px solid #cfd8e5}
+.slip-info-item:nth-child(odd){border-right:1px solid #cfd8e5}
+.slip-info-label{padding:8px;background:#f3f6fa;font-size:10px;font-weight:700;color:#53657d}
+.slip-info-value{padding:8px;font-size:11px;font-weight:700;color:#1d2d44}
+.slip-attendance{display:grid;grid-template-columns:repeat(4,1fr);margin-top:14px;border:1px solid #cfd8e5}
+.slip-att-box{text-align:center;padding:9px;border-right:1px solid #cfd8e5}
+.slip-att-box:last-child{border-right:0}
+.slip-att-box span{display:block;font-size:9px;color:#718096}
+.slip-att-box strong{display:block;margin-top:3px;font-size:13px;color:#20334f}
+.slip-pay-table{width:100%;margin-top:14px;border-collapse:collapse}
+.slip-pay-table th{padding:9px;border:1px solid #cfd8e5;background:#edf2f7;color:#32445d;font-size:10px;text-align:left}
+.slip-pay-table td{padding:9px;border:1px solid #cfd8e5;font-size:11px;color:#26384f}
+.slip-pay-table td:last-child,.slip-pay-table th:last-child{text-align:right}
+.slip-total-row td{font-weight:800;background:#f7f9fc}
+.slip-net{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding:13px 15px;border:2px solid #1b9d6b;background:#eefbf5}
+.slip-net span{font-size:12px;font-weight:800;color:#365268}
+.slip-net strong{font-size:20px;color:#118458}
+.slip-note{margin-top:14px;padding:10px 12px;border:1px solid #d7e0eb;background:#fafcff;font-size:10px;color:#5c6c80}
+.slip-footer{margin-top:22px;padding-top:10px;border-top:1px solid #dbe3ed;text-align:center;font-size:9px;color:#8793a4}
+@media(max-width:560px){.salary-slip-overlay{padding:8px}.salary-slip-window{width:100%;max-height:96vh}.salary-slip-document{margin:8px auto;padding:14px;min-width:680px}.salary-slip-window{overflow:auto}.salary-slip-toolbar strong{font-size:11px}.salary-slip-toolbar button{height:31px;padding:0 8px;font-size:8px}}
+
+</style>
 </head>
 
 <body>
@@ -2897,8 +3232,16 @@ textarea {
   <span class="nav-icon c-green">
     <i data-lucide="indian-rupee"></i>
   </span>
-
   <span>Salary</span>
+</a>
+
+<a href="#other-income"
+   class="nav-item"
+   data-section="other-income">
+  <span class="nav-icon c-cyan">
+    <i data-lucide="circle-dollar-sign"></i>
+  </span>
+  <span>Other Income</span>
 </a>
 
 <a href="#expenses"
@@ -3326,36 +3669,72 @@ textarea {
 
       </div>
 
-      <form id="transactionForm">
-
-        <input
-          type="hidden"
-          id="transactionType"
-        >
-
-        <div class="form-group">
-
-          <label for="amount">
-            Amount
-          </label>
-
-          <input
-            type="number"
-            class="form-control"
-            id="amount"
-            min="1"
-            step="0.01"
-            placeholder="Enter amount"
-            required
-          >
-
-        </div>
-
-        <div class="form-group">
-  <label id="categoryLabel" for="category">
-    Category / Source
-  </label>
-
+     <form id="transactionForm">
+<input type="hidden" id="transactionType">
+<div class="form-group" id="incomeSourceWrap" style="display:none;">
+<label for="incomeSourceMode">Income Source</label>
+<select class="form-control" id="incomeSourceMode">
+<option value="factory">MUNITIONS INDIA LTD Salary</option>
+<option value="other">Other Income</option>
+</select>
+</div>
+<div id="salaryFields" style="display:none;">
+<div class="salary-section-title">Employee Details</div>
+<div class="form-grid salary-grid">
+<div class="form-group"><label>Employee Name</label><input type="text" class="form-control" id="salaryEmployeeName" value="Ajay Kewat"></div>
+<div class="form-group"><label>Employee ID</label><input type="text" class="form-control" id="salaryEmployeeId" value="10731"></div>
+<div class="form-group"><label>Department / Designation</label><input type="text" class="form-control" id="salaryDesignation" value="TB-DBW"></div>
+<div class="form-group"><label>Company / Factory Name</label><input type="text" class="form-control" id="salaryCompany" value="MUNITIONS INDIA LTD"></div>
+</div>
+<div class="salary-section-title">Salary Details</div>
+<div class="form-grid salary-grid">
+<div class="form-group"><label>Salary Month</label><input type="month" class="form-control" id="salaryMonth"></div>
+<div class="form-group"><label>Monthly Basic Salary</label><input type="number" class="form-control salary-calc" id="monthlyBasicSalary" min="0" step="0.01" value="19900"></div>
+<div class="form-group"><label>Salary Divisor</label><select class="form-control salary-calc" id="salaryDivisor"><option value="26">26 Days Default</option><option value="30">30 Days</option><option value="custom">Custom</option></select><input type="number" class="form-control salary-calc salary-sub-input" id="customSalaryDivisor" min="1" step="1" placeholder="Custom divisor" style="display:none;"></div>
+<div class="form-group"><label>Payable Basic</label><input type="number" class="form-control" id="basicSalary" readonly></div>
+<div class="form-group"><label>DA Rate</label><select class="form-control salary-calc" id="daRate"><option value="60">60% Default</option><option value="50">50%</option><option value="40">40%</option><option value="30">30%</option><option value="custom">Custom %</option></select><input type="number" class="form-control salary-calc salary-sub-input" id="daCustomRate" min="0" step="0.01" placeholder="Custom DA %" style="display:none;"></div>
+<div class="form-group"><label>DA Amount</label><input type="number" class="form-control" id="daSalary" readonly></div>
+<div class="form-group"><label>HRA Rate</label><select class="form-control salary-calc" id="hraRate"><option value="20">20% Default</option><option value="15">15%</option><option value="10">10%</option><option value="custom">Custom %</option></select><input type="number" class="form-control salary-calc salary-sub-input" id="hraCustomRate" min="0" step="0.01" placeholder="Custom HRA %" style="display:none;"></div>
+<div class="form-group"><label>HRA Amount</label><input type="number" class="form-control" id="hraSalary" readonly></div>
+<div class="form-group"><label>Other Allowance</label><input type="number" class="form-control salary-calc" id="otherAllowance" min="0" step="0.01" value="0"></div>
+<div class="form-group"><label>Overtime</label><select class="form-control salary-calc" id="overtimeEligibility"><option value="no">Not Eligible</option><option value="yes">Eligible</option></select><input type="number" class="form-control salary-calc salary-sub-input" id="overtimeSalary" min="0" step="0.01" value="0" style="display:none;"></div>
+<div class="form-group"><label>Gross Earnings</label><input type="number" class="form-control" id="grossSalary" readonly></div>
+</div>
+<div class="salary-section-title">PF & Deductions</div>
+<div class="form-grid salary-grid">
+<div class="form-group"><label>PF</label><select class="form-control salary-calc" id="pfEnabled"><option value="on">PF ON</option><option value="off">PF OFF</option></select></div>
+<div class="form-group"><label>Employee PF Rate</label><input type="number" class="form-control salary-calc" id="employeePFRate" min="0" step="0.01" value="12"></div>
+<div class="form-group"><label>Employee PF</label><input type="number" class="form-control" id="pfDeduction" readonly></div>
+<div class="form-group"><label>Employer PF Rate</label><input type="number" class="form-control salary-calc" id="employerPFRate" min="0" step="0.01" value="12"></div>
+<div class="form-group"><label>Employer PF</label><input type="number" class="form-control" id="employerPF" readonly></div>
+<div class="form-group"><label>PF Interest Rate</label><input type="number" class="form-control" id="pfInterestRate" min="0" step="0.01" value="8"></div>
+<div class="form-group"><label>ESIC</label><select class="form-control salary-calc" id="esicApplicable"><option value="no">Not Applicable</option><option value="yes">Applicable</option></select><input type="number" class="form-control salary-calc salary-sub-input" id="esicDeduction" min="0" step="0.01" value="0" style="display:none;"></div>
+<div class="form-group"><label>Professional Tax / Other</label><select class="form-control salary-calc" id="otherDeductionType"><option value="none">None</option><option value="professional_tax">Professional Tax</option><option value="other">Other Deduction</option></select><input type="number" class="form-control salary-calc salary-sub-input" id="otherDeduction" min="0" step="0.01" value="0" style="display:none;"></div>
+<div class="form-group"><label>Advance / Loan</label><select class="form-control salary-calc" id="loanEligible"><option value="no">Not Eligible</option><option value="yes">Applicable</option></select><input type="number" class="form-control salary-calc salary-sub-input" id="loanDeduction" min="0" step="0.01" value="0" style="display:none;"></div>
+<div class="form-group"><label>Total Deduction</label><input type="number" class="form-control" id="totalDeduction" readonly></div>
+</div>
+<div class="salary-net-box"><span>Net Salary</span><strong id="netSalaryDisplay">₹0.00</strong></div>
+<div class="salary-section-title">Attendance From Database</div>
+<div class="form-grid salary-grid">
+<div class="form-group"><label>Working Days</label><input type="number" class="form-control" id="workingDays" readonly></div>
+<div class="form-group"><label>Present Days</label><input type="number" class="form-control" id="presentDays" readonly></div>
+<div class="form-group"><label>Absent Days</label><input type="number" class="form-control" id="absentDays" readonly></div>
+<div class="form-group"><label>Leave Days</label><input type="number" class="form-control" id="leaveDays" readonly></div>
+</div>
+</div>
+<div id="normalTransactionFields">
+<div class="form-group" id="otherIncomeMonthWrap" style="display:none;">
+<label for="otherIncomeMonth">Income Month</label>
+<input type="month" class="form-control" id="otherIncomeMonth">
+</div>
+<div class="form-group">
+<label for="amount">Amount</label>
+<input type="number" class="form-control" id="amount" min="1" step="0.01" placeholder="Enter amount">
+</div>
+<div class="form-group">
+<label id="categoryLabel" for="category">
+Category / Source
+</label>
   <input
     type="text"
     class="form-control"
@@ -3398,27 +3777,33 @@ textarea {
 
   <input type="hidden" id="expenseCategory">
 </div>
-   <input
-    type="text"
-    class="form-control"
-    id="otherExpenseCategory"
-    placeholder="Enter other expense category"
-    maxlength="60"
-    style="display:none; margin-top:8px;"
-  >
+  <input
+type="text"
+class="form-control"
+id="otherExpenseCategory"
+placeholder="Enter other expense category"
+maxlength="60"
+style="display:none; margin-top:8px;"
+>
+</div>
+<div class="form-group" id="expenseFundingWrap" style="display:none;">
+<label for="expenseFundingSource">Pay From</label>
+<select class="form-control" id="expenseFundingSource">
+<option value="salary">MUNITIONS INDIA LTD Salary</option>
+<option value="other_income">Other Income</option>
+</select>
 </div>
 <div class="form-group" id="savingFundingWrap" style="display:none;">
-  <label for="savingFundingType">Saving From</label>
-  <select class="form-control" id="savingFundingType">
-    <option value="balance">Available Balance</option>
-    <option value="external">Outside Money</option>
-  </select>
+<label for="savingFundingType">Saving From</label>
+<select class="form-control" id="savingFundingType">
+<option value="salary">MUNITIONS INDIA LTD Salary</option>
+<option value="other_income">Other Income</option>
+<option value="external">Outside Money</option>
+</select>
 </div>
-        <div class="form-group">
-
-          <label for="transactionDate">
-            Date
-          </label>
+</div>
+<div class="form-group">
+<label for="transactionDate" id="transactionDateLabel">Date</label>
 
           <input
             type="date"
@@ -3445,12 +3830,7 @@ textarea {
 
         </div>
 
-        <button
-          type="submit"
-          class="submit-btn"
-        >
-          Save Transaction
-        </button>
+        <button type="submit" class="submit-btn" id="transactionSubmitBtn">Save Transaction</button>
 
       </form>
 
@@ -3514,15 +3894,26 @@ const FIREBASE_VAPID_KEY=
   ======================================== */
 
   let currentUser = null;
-let salary = 0;
-let totalSalary = 0;
-let expenses = 0;
-let savings = 0;
-let balanceFundedSavings = 0;
-let transactions = [];
-let salaryRows = [];
-let expenseRows = [];
-let savingRows = [];
+let salary=0;
+let totalSalary=0;
+let otherIncome=0;
+let totalOtherIncome=0;
+let expenses=0;
+let savings=0;
+let balanceFundedSavings=0;
+let transactions=[];
+let salaryRows=[];
+let otherIncomeRows=[];
+let expenseRows=[];
+let savingRows=[];
+let editingSalaryId=null;
+let otherIncomeFilterMonth=`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,"0")}`;
+let otherIncomeDetailMode="income";
+let reportFilterType="month";
+let reportMonth=`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,"0")}`;
+let reportYear=String(new Date().getFullYear());
+let reportStartDate=`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,"0")}-01`;
+let reportEndDate=`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,"0")}-${String(new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate()).padStart(2,"0")}`;
 let attendanceRows = [];
 let attendanceAllRows = [];
 let autoAttendanceEnabled=false;
@@ -3998,29 +4389,26 @@ savings = 0;
     );
 
 
-    const [
-      salaryResult,
-      expenseResult,
-      savingResult
-    ] =
-      await Promise.all([
-
+   const[
+salaryResult,
+otherIncomeResult,
+expenseResult,
+savingResult
+]=await Promise.all([
         db
-          .from("salary_entries")
-          .select("*")
-          .eq(
-            "user_id",
-            currentUser.id
-          )
-          .order(
-            "salary_date",
-            {
-              ascending: false
-            }
-          ),
+.from("salary_entries")
+.select("*")
+.eq("user_id",currentUser.id)
+.order("salary_date",{ascending:false}),
 
-        db
-          .from("expenses")
+db
+.from("other_income")
+.select("*")
+.eq("user_id",currentUser.id)
+.order("income_date",{ascending:false}),
+
+db
+.from("expenses")
           .select("*")
           .eq(
             "user_id",
@@ -4049,13 +4437,11 @@ savings = 0;
 
       ]);
 
-
-    const firstError =
-      salaryResult.error ||
-      expenseResult.error ||
-      savingResult.error;
-
-
+const firstError=
+salaryResult.error||
+otherIncomeResult.error||
+expenseResult.error||
+savingResult.error;
     if (firstError) {
 
       console.error(
@@ -4071,12 +4457,9 @@ savings = 0;
 
     }
 
-
-    salaryRows =
-      salaryResult.data || [];
-
-    expenseRows =
-      expenseResult.data || [];
+salaryRows=salaryResult.data||[];
+otherIncomeRows=otherIncomeResult.data||[];
+expenseRows=expenseResult.data||[];
 
     savingRows =
       savingResult.data || [];
@@ -4129,26 +4512,15 @@ if (
     const month =
       now.getMonth();
 
+salary=salaryRows
+.filter(row=>isSameMonth(row.salary_date,year,month))
+.reduce((sum,row)=>sum+Number(row.amount),0);
 
-    salary =
-      salaryRows
-        .filter(
-          row =>
-            isSameMonth(
-              row.salary_date,
-              year,
-              month
-            )
-        )
-        .reduce(
-          (sum, row) =>
-            sum +
-            Number(row.amount),
-          0
-        );
+otherIncome=otherIncomeRows
+.filter(row=>isSameMonth(row.income_date,year,month))
+.reduce((sum,row)=>sum+Number(row.amount),0);
 
-
-    expenses =
+expenses =
       expenseRows
         .filter(
           row =>
@@ -4199,12 +4571,8 @@ balanceFundedSavings =
       0
     );
 
-totalSalary =
-  salaryRows.reduce(
-    (sum, row) =>
-      sum + Number(row.amount),
-    0
-  );
+totalSalary=salaryRows.reduce((sum,row)=>sum+Number(row.amount),0);
+totalOtherIncome=otherIncomeRows.reduce((sum,row)=>sum+Number(row.amount),0);
 }
 
 
@@ -4240,32 +4608,46 @@ totalSalary =
 
   function buildTransactions() {
 
-    const salaryTransactions =
-      salaryRows.map(
-        row => ({
-          id:
-            row.id,
-
-          type:
-            "salary",
-
-          amount:
-            Number(row.amount),
-
-          category:
-            row.source,
-
-          date:
-            row.salary_date,
-
-          note:
-            row.note || "",
-
-          created_at:
-            row.created_at
-        })
-      );
-
+   const salaryTransactions=salaryRows.map(row=>({
+id:row.id,
+type:"salary",
+amount:Number(row.amount),
+category:row.source,
+date:row.salary_date,
+note:row.note||"",
+created_at:row.created_at,
+salary_month:row.salary_month||"",
+employee_name:row.employee_name||"",
+employee_id:row.employee_id||"",
+designation:row.designation||"",
+company_name:row.company_name||"",
+basic_salary:Number(row.basic_salary||0),
+da_rate:Number(row.da_rate||0),
+da:Number(row.da||0),
+hra_rate:Number(row.hra_rate||0),
+hra:Number(row.hra||0),
+other_allowance:Number(row.other_allowance||0),
+overtime_eligible:row.overtime_eligible===true,
+overtime:Number(row.overtime||0),
+gross_salary:Number(row.gross_salary||0),
+pf_enabled:row.pf_enabled!==false,
+employee_pf_rate:Number(row.employee_pf_rate||0),
+pf_deduction:Number(row.pf_deduction||0),
+employer_pf_rate:Number(row.employer_pf_rate||0),
+employer_pf:Number(row.employer_pf||0),
+pf_interest_rate:Number(row.pf_interest_rate||0),
+esic_applicable:row.esic_applicable===true,
+esic_deduction:Number(row.esic_deduction||0),
+other_deduction_type:row.other_deduction_type||"none",
+other_deduction:Number(row.other_deduction||0),
+loan_eligible:row.loan_eligible===true,
+loan_deduction:Number(row.loan_deduction||0),
+total_deduction:Number(row.total_deduction||0),
+working_days:Number(row.working_days||0),
+present_days:Number(row.present_days||0),
+absent_days:Number(row.absent_days||0),
+leave_days:Number(row.leave_days||0)
+}));
 
     const expenseTransactions =
       expenseRows.map(
@@ -4292,7 +4674,16 @@ totalSalary =
             row.created_at
         })
       );
-
+const otherIncomeTransactions=otherIncomeRows.map(row=>({
+id:row.id,
+type:"other_income",
+amount:Number(row.amount),
+category:row.source,
+date:row.income_date,
+note:row.note||"",
+income_month:row.income_month||"",
+created_at:row.created_at
+}));
 
     const savingTransactions =
       savingRows.map(
@@ -4321,11 +4712,12 @@ totalSalary =
       );
 
 
-    transactions = [
-      ...salaryTransactions,
-      ...expenseTransactions,
-      ...savingTransactions
-    ];
+    transactions=[
+...salaryTransactions,
+...otherIncomeTransactions,
+...expenseTransactions,
+...savingTransactions
+];
 
 
     transactions.sort(
@@ -4389,32 +4781,25 @@ totalSalary =
             )
             .value;
 
-
-        const amount =
-          Number(
-            document
-              .getElementById(
-                "amount"
-              )
-              .value
-          );
-
-
-       let category="";
-
-if(type==="expense"){
-  const expenseValue=document.getElementById("expenseCategory").value.trim();
-  const otherValue=document.getElementById("otherExpenseCategory").value.trim();
-
-  if(expenseValue==="Other"){
-    category=otherValue;
-  }else{
-    category=expenseValue;
-  }
+let amount=0;
+let salaryData=null;
+const incomeMode=type==="salary"?document.getElementById("incomeSourceMode").value:"";
+if(type==="salary"&&incomeMode==="factory"){
+salaryData=calculateSalarySlip();
+amount=salaryData.net;
 }else{
-  category=document.getElementById("category").value.trim();
+amount=Number(document.getElementById("amount").value);
 }
-
+let category="";
+if(type==="salary"&&incomeMode==="factory"){
+category="Monthly Salary";
+}else if(type==="expense"){
+const expenseValue=document.getElementById("expenseCategory").value.trim();
+const otherValue=document.getElementById("otherExpenseCategory").value.trim();
+category=expenseValue==="Other"?otherValue:expenseValue;
+}else{
+category=document.getElementById("category").value.trim();
+}
 
         const date =
           document
@@ -4431,10 +4816,19 @@ if(type==="expense"){
             .value
             .trim();
 
-        const savingFundingType =
-          type === "saving"
-            ? document.getElementById("savingFundingType").value
-            : "balance";
+        const savingFundingSource=
+type==="saving"
+?document.getElementById("savingFundingType").value
+:"salary";
+const savingFundingType=
+savingFundingSource==="external"
+?"external"
+:"balance";
+
+const expenseFundingSource=
+type==="expense"
+?document.getElementById("expenseFundingSource").value
+:"salary";
 
         if (
           ![
@@ -4476,109 +4870,113 @@ if(!category){
 }
 
         let result;
+if(type==="salary"&&incomeMode==="factory"){
+const salaryMonth=document.getElementById("salaryMonth").value;
+if(!salaryMonth){
+showToast("Select salary month");
+return;
+}
+if(!salaryData||salaryData.gross<=0){
+showToast("Enter Basic Salary");
+return;
+}
+const salaryPayload={
+user_id:currentUser.id,
+amount:salaryData.net,
+source:"Monthly Salary",
+salary_date:date,
+salary_month:salaryMonth,
+employee_name:document.getElementById("salaryEmployeeName").value.trim(),
+employee_id:document.getElementById("salaryEmployeeId").value.trim(),
+designation:document.getElementById("salaryDesignation").value.trim(),
+company_name:document.getElementById("salaryCompany").value.trim(),
+monthly_basic_salary:salaryData.monthlyBasic,
+salary_divisor:salaryData.divisor,
+basic_salary:salaryData.basic,
+da_rate:salaryData.daRate,
+da:salaryData.da,
+hra_rate:salaryData.hraRate,
+hra:salaryData.hra,
+other_allowance:salaryData.other,
+overtime_eligible:salaryData.overtimeEligible,
+overtime:salaryData.overtime,
+gross_salary:salaryData.gross,
+pf_enabled:salaryData.pfEnabled,
+employee_pf_rate:salaryData.employeePFRate,
+employer_pf_rate:salaryData.employerPFRate,
+pf_deduction:salaryData.employeePF,
+employer_pf:salaryData.employerPF,
+pf_interest_rate:Number(document.getElementById("pfInterestRate").value||8),
+esic_applicable:salaryData.esicApplicable,
+esic_deduction:salaryData.esic,
+other_deduction_type:salaryData.otherType,
+other_deduction:salaryData.otherDeduction,
+loan_eligible:salaryData.loanEligible,
+loan_deduction:salaryData.loanDeduction,
+total_deduction:salaryData.deduction,
+working_days:Number(document.getElementById("workingDays").value||0),
+present_days:Number(document.getElementById("presentDays").value||0),
+absent_days:Number(document.getElementById("absentDays").value||0),
+leave_days:Number(document.getElementById("leaveDays").value||0),
+note:note||null
+};
+if(editingSalaryId){
+result=await db.from("salary_entries").update(salaryPayload).eq("id",editingSalaryId).eq("user_id",currentUser.id).select().single();
+}else{
+result=await db.from("salary_entries").insert(salaryPayload).select().single();
+}
+}
 
+if(type==="salary"&&incomeMode==="other"){
+const incomeMonth=document.getElementById("otherIncomeMonth").value;
+if(!incomeMonth){
+showToast("Select income month");
+return;
+}
+result=await db.from("other_income").insert({
+user_id:currentUser.id,
+amount:amount,
+source:category,
+income_month:incomeMonth,
+income_date:date,
+note:note||null
+}).select().single();
+}
 
-        if (
-          type ===
-          "salary"
-        ) {
+if(type==="expense"){
+result=await db
+.from("expenses")
+.insert({
+user_id:currentUser.id,
+amount:amount,
+category:category,
+funding_source:expenseFundingSource,
+expense_date:date,
+note:note||null
+})
+.select()
+.single();
+}
+if(type==="saving"){
+result=await db
+.from("savings")
+.insert({
+user_id:currentUser.id,
+amount:amount,
+source:category,
+funding_type:savingFundingType,
+funding_source:savingFundingSource,
+saving_date:date,
+note:note||null
+})
+.select()
+.single();
+}
 
-          result =
-            await db
-              .from(
-                "salary_entries"
-              )
-              .insert({
-                user_id:
-                  currentUser.id,
-
-                amount:
-                  amount,
-
-                source:
-                  category,
-
-                salary_date:
-                  date,
-
-                note:
-                  note || null
-              })
-              .select()
-              .single();
-
-        }
-
-
-        if (
-          type ===
-          "expense"
-        ) {
-
-          result =
-            await db
-              .from(
-                "expenses"
-              )
-              .insert({
-                user_id:
-                  currentUser.id,
-
-                amount:
-                  amount,
-
-                category:
-                  category,
-
-                expense_date:
-                  date,
-
-                note:
-                  note || null
-              })
-              .select()
-              .single();
-
-        }
-
-        if (
-          type ===
-          "saving"
-        ) {
-
-          result =
-            await db
-              .from(
-                "savings"
-              )
-              .insert({
-                user_id:
-                  currentUser.id,
-
-                amount:
-                  amount,
-
-                source:
-                  category,
-
-                funding_type:
-                  savingFundingType,
-
-                saving_date:
-                  date,
-
-                note:
-                  note || null
-              })
-              .select()
-              .single();
-
-        }
-
-        if (
-          !result ||
-          result.error
-        ) {
+if(
+!result||
+result.error
+){
 
           const message =
             result?.error?.message ||
@@ -4622,10 +5020,11 @@ if(!category){
 
  function updateDashboard() {
 
-    const available =
-      salary -
-      expenses -
-      balanceFundedSavings;
+  const available=
+salary+
+otherIncome-
+expenses-
+balanceFundedSavings;
 document
   .getElementById(
     "salaryAmount"
@@ -5235,13 +5634,11 @@ function showSection(section) {
     .remove("hidden");
 
 
-  if (section === "salary") {
-
-    renderSalaryPage();
-
-  } else if (
-    section === "expenses"
-  ) {
+  if(section==="salary"){
+renderSalaryPage();
+}else if(section==="other-income"){
+renderOtherIncomePage();
+}else if(section==="expenses"){
 
     renderExpensePage();
 
@@ -5313,7 +5710,395 @@ function showSection(section) {
 /* ========================================
    SALARY PAGE
 ======================================== */
-
+function renderOtherIncomePage(){
+const section=document.getElementById("sectionView");
+const now=new Date();
+const currentYear=now.getFullYear();
+const currentMonth=`${currentYear}-${String(now.getMonth()+1).padStart(2,"0")}`;
+const years=new Set([currentYear]);
+otherIncomeRows.forEach(row=>{
+const key=row.income_month||String(row.income_date||"").slice(0,7);
+if(/^\d{4}-\d{2}$/.test(key))years.add(Number(key.slice(0,4)));
+});
+expenseRows.forEach(row=>{
+if((row.funding_source||"salary")==="other_income"){
+const key=String(row.expense_date||"").slice(0,7);
+if(/^\d{4}-\d{2}$/.test(key))years.add(Number(key.slice(0,4)));
+}
+});
+savingRows.forEach(row=>{
+if(row.funding_source==="other_income"){
+const key=String(row.saving_date||"").slice(0,7);
+if(/^\d{4}-\d{2}$/.test(key))years.add(Number(key.slice(0,4)));
+}
+});
+const months=[];
+[...years].sort((a,b)=>b-a).forEach(year=>{
+for(let m=12;m>=1;m--){
+months.push(`${year}-${String(m).padStart(2,"0")}`);
+}
+});
+if(!months.includes(otherIncomeFilterMonth))otherIncomeFilterMonth=currentMonth;
+const filteredIncomeRows=otherIncomeRows.filter(row=>{
+const key=row.income_month||String(row.income_date||"").slice(0,7);
+return key===otherIncomeFilterMonth;
+});
+const filteredExpenseRows=expenseRows.filter(row=>
+(row.funding_source||"salary")==="other_income"&&
+String(row.expense_date||"").slice(0,7)===otherIncomeFilterMonth
+);
+const filteredSavingRows=savingRows.filter(row=>
+row.funding_source==="other_income"&&
+String(row.saving_date||"").slice(0,7)===otherIncomeFilterMonth
+);
+const selectedIncome=filteredIncomeRows.reduce((sum,row)=>sum+Number(row.amount),0);
+const selectedExpense=filteredExpenseRows.reduce((sum,row)=>sum+Number(row.amount),0);
+const selectedSaving=filteredSavingRows.reduce((sum,row)=>sum+Number(row.amount),0);
+const selectedBalance=Math.max(0,selectedIncome-selectedExpense-selectedSaving);
+const totalIncome=otherIncomeRows.reduce((sum,row)=>sum+Number(row.amount),0);
+const totalExpense=expenseRows
+.filter(row=>(row.funding_source||"salary")==="other_income")
+.reduce((sum,row)=>sum+Number(row.amount),0);
+const totalSaving=savingRows
+.filter(row=>row.funding_source==="other_income")
+.reduce((sum,row)=>sum+Number(row.amount),0);
+const totalBalance=Math.max(0,totalIncome-totalExpense-totalSaving);
+const monthOptions=months.map(value=>{
+const[y,m]=value.split("-").map(Number);
+const label=`${new Date(y,m-1,1).toLocaleDateString("en-US",{month:"short"}).toUpperCase()} ${y}`;
+return `<option value="${value}" ${value===otherIncomeFilterMonth?"selected":""}>${label}</option>`;
+}).join("");
+let detailTitle="Other Income History";
+let detailHead=`
+<thead>
+<tr>
+<th>Date</th>
+<th>Month</th>
+<th>Source</th>
+<th>Note</th>
+<th>Amount</th>
+<th>View</th>
+<th>PDF</th>
+<th>Action</th>
+</tr>
+</thead>`;
+let detailRows=filteredIncomeRows.length?filteredIncomeRows.map(row=>`
+<tr>
+<td>${formatDate(row.income_date)}</td>
+<td>${escapeHTML(row.income_month||"-")}</td>
+<td><strong>${escapeHTML(row.source)}</strong></td>
+<td>${escapeHTML(row.note||"-")}</td>
+<td class="amount-green">${formatMoney(row.amount)}</td>
+<td><button type="button" class="salary-slip-btn view" onclick="viewOtherIncomeStatement('${row.id}')"><i data-lucide="eye"></i> View</button></td>
+<td><button type="button" class="salary-slip-btn download" onclick="downloadOtherIncomeStatement('${row.id}')"><i data-lucide="download"></i> PDF</button></td>
+<td><button type="button" class="salary-slip-btn delete" onclick="deleteAllTransaction('other_income','${row.id}')"><i data-lucide="trash-2"></i> Delete</button></td>
+</tr>`).join(""):`<tr><td colspan="8" class="other-income-empty">No income found for this month.</td></tr>`;
+if(otherIncomeDetailMode==="expense"){
+detailTitle="Other Income Expenses";
+detailHead=`
+<thead>
+<tr>
+<th>Date</th>
+<th>Category</th>
+<th>Note</th>
+<th>Amount</th>
+</tr>
+</thead>`;
+detailRows=filteredExpenseRows.length?filteredExpenseRows.map(row=>`
+<tr>
+<td>${formatDate(row.expense_date)}</td>
+<td><strong>${escapeHTML(row.category||"-")}</strong></td>
+<td>${escapeHTML(row.note||"-")}</td>
+<td class="amount-red">-${formatMoney(row.amount)}</td>
+</tr>`).join(""):`<tr><td colspan="4" class="other-income-empty">No expense from Other Income this month.</td></tr>`;
+}
+if(otherIncomeDetailMode==="saving"){
+detailTitle="Other Income Savings";
+detailHead=`
+<thead>
+<tr>
+<th>Date</th>
+<th>Purpose</th>
+<th>Note</th>
+<th>Amount</th>
+</tr>
+</thead>`;
+detailRows=filteredSavingRows.length?filteredSavingRows.map(row=>`
+<tr>
+<td>${formatDate(row.saving_date)}</td>
+<td><strong>${escapeHTML(row.source||"-")}</strong></td>
+<td>${escapeHTML(row.note||"-")}</td>
+<td class="amount-green">${formatMoney(row.amount)}</td>
+</tr>`).join(""):`<tr><td colspan="4" class="other-income-empty">No saving from Other Income this month.</td></tr>`;
+}
+section.innerHTML=`
+<div class="page-head other-income-head">
+<div>
+<h2>Other Income</h2>
+<p>Income received outside your Munitions India salary.</p>
+</div>
+<div class="other-income-actions">
+<select class="other-income-month-select" onchange="changeOtherIncomeMonth(this.value)">
+${monthOptions}
+</select>
+<button class="page-action" onclick="openOtherIncomeModal()">
+<i data-lucide="plus"></i> Add Income
+</button>
+</div>
+</div>
+<div class="other-income-stats">
+<button class="other-income-stat ${otherIncomeDetailMode==="income"?"active":""}" onclick="showOtherIncomeDetail('income')">
+<small>Month Balance</small>
+<strong>${formatMoney(selectedBalance)}</strong>
+</button>
+<button class="other-income-stat" onclick="showOtherIncomeDetail('income')">
+<small>Available</small>
+<strong>${formatMoney(totalBalance)}</strong>
+</button>
+<button class="other-income-stat expense ${otherIncomeDetailMode==="expense"?"active":""}" onclick="showOtherIncomeDetail('expense')">
+<small>Expense</small>
+<strong>${formatMoney(selectedExpense)}</strong>
+</button>
+<button class="other-income-stat saving ${otherIncomeDetailMode==="saving"?"active":""}" onclick="showOtherIncomeDetail('saving')">
+<small>Saving</small>
+<strong>${formatMoney(selectedSaving)}</strong>
+</button>
+</div>
+<div class="data-card other-income-history">
+<div class="data-card-header"><h3>${detailTitle}</h3></div>
+<div class="data-table-wrap">
+<table class="data-table">
+${detailHead}
+<tbody>
+${detailRows}
+</tbody>
+</table>
+</div>
+</div>`;
+lucide.createIcons();
+}
+function changeOtherIncomeMonth(value){
+otherIncomeFilterMonth=value;
+otherIncomeDetailMode="income";
+renderOtherIncomePage();
+}
+function showOtherIncomeDetail(type){
+otherIncomeDetailMode=type;
+renderOtherIncomePage();
+}
+function getOtherIncomeStatementData(row){
+const month=row.income_month||String(row.income_date||"").slice(0,7);
+const incomeRows=otherIncomeRows.filter(item=>{
+const key=item.income_month||String(item.income_date||"").slice(0,7);
+return key===month;
+});
+const expenses=expenseRows.filter(item=>
+(item.funding_source||"salary")==="other_income"&&
+String(item.expense_date||"").slice(0,7)===month
+);
+const savings=savingRows.filter(item=>
+item.funding_source==="other_income"&&
+String(item.saving_date||"").slice(0,7)===month
+);
+const totalIncome=incomeRows.reduce((sum,item)=>sum+Number(item.amount||0),0);
+const totalExpense=expenses.reduce((sum,item)=>sum+Number(item.amount||0),0);
+const totalSaving=savings.reduce((sum,item)=>sum+Number(item.amount||0),0);
+const balance=Math.max(0,totalIncome-totalExpense-totalSaving);
+return{month,incomeRows,expenses,savings,totalIncome,totalExpense,totalSaving,balance};
+}
+function getOtherIncomeStatementHTML(row){
+const data=getOtherIncomeStatementData(row);
+const expenseRowsHTML=data.expenses.length?data.expenses.map(item=>`
+<tr>
+<td>${formatDate(item.expense_date)}</td>
+<td>${escapeHTML(item.category||"-")}</td>
+<td>${escapeHTML(item.note||"-")}</td>
+<td>-${formatMoney(item.amount)}</td>
+</tr>`).join(""):`<tr><td colspan="4">No expenses from Other Income.</td></tr>`;
+const savingRowsHTML=data.savings.length?data.savings.map(item=>`
+<tr>
+<td>${formatDate(item.saving_date)}</td>
+<td>${escapeHTML(item.source||"-")}</td>
+<td>${escapeHTML(item.note||"-")}</td>
+<td>${formatMoney(item.amount)}</td>
+</tr>`).join(""):`<tr><td colspan="4">No savings from Other Income.</td></tr>`;
+return`
+<div class="salary-slip-document" id="otherIncomeStatementDocument">
+<div class="slip-header">
+<h1>MY PAISA</h1>
+<h2>OTHER INCOME STATEMENT</h2>
+<p>${formatSalaryMonth(data.month)} | Received: ${formatDate(row.income_date)}</p>
+</div>
+<div class="slip-title">Income Summary</div>
+<div class="slip-info-grid">
+<div class="slip-info-item"><div class="slip-info-label">Income Source</div><div class="slip-info-value">${escapeHTML(row.source||"-")}</div></div>
+<div class="slip-info-item"><div class="slip-info-label">Income Month</div><div class="slip-info-value">${formatSalaryMonth(data.month)}</div></div>
+<div class="slip-info-item"><div class="slip-info-label">Received Date</div><div class="slip-info-value">${formatDate(row.income_date)}</div></div>
+<div class="slip-info-item"><div class="slip-info-label">Entry Amount</div><div class="slip-info-value">${formatMoney(row.amount)}</div></div>
+</div>
+<div class="slip-attendance">
+<div class="slip-att-box"><span>Total Income</span><strong>${formatMoney(data.totalIncome)}</strong></div>
+<div class="slip-att-box"><span>Expense</span><strong>${formatMoney(data.totalExpense)}</strong></div>
+<div class="slip-att-box"><span>Saving</span><strong>${formatMoney(data.totalSaving)}</strong></div>
+<div class="slip-att-box"><span>Balance</span><strong>${formatMoney(data.balance)}</strong></div>
+</div>
+<table class="slip-pay-table">
+<thead>
+<tr><th colspan="4">Expenses From Other Income</th></tr>
+<tr><th>Date</th><th>Category</th><th>Note</th><th>Amount</th></tr>
+</thead>
+<tbody>${expenseRowsHTML}</tbody>
+</table>
+<table class="slip-pay-table" style="margin-top:14px">
+<thead>
+<tr><th colspan="4">Savings From Other Income</th></tr>
+<tr><th>Date</th><th>Purpose</th><th>Note</th><th>Amount</th></tr>
+</thead>
+<tbody>${savingRowsHTML}</tbody>
+</table>
+<div class="slip-net"><span>AVAILABLE OTHER INCOME</span><strong>${formatMoney(data.balance)}</strong></div>
+${row.note?`<div class="slip-note"><strong>Income Note:</strong> ${escapeHTML(row.note)}</div>`:""}
+<div class="slip-footer">Computer generated Other Income statement • My Paisa</div>
+</div>`;
+}
+function viewOtherIncomeStatement(id){
+const row=otherIncomeRows.find(item=>String(item.id)===String(id));
+if(!row){
+showToast("Other Income record not found");
+return;
+}
+document.getElementById("salarySlipOverlay")?.remove();
+document.body.insertAdjacentHTML("beforeend",`
+<div class="salary-slip-overlay" id="salarySlipOverlay">
+<div class="salary-slip-window">
+<div class="salary-slip-toolbar">
+<strong>Other Income - ${escapeHTML(row.source||"Income")}</strong>
+<div class="salary-slip-toolbar-actions">
+<button type="button" class="slip-download" onclick="downloadOtherIncomeStatement('${row.id}')"><i data-lucide="download"></i> Download PDF</button>
+<button type="button" onclick="closeSalarySlip()"><i data-lucide="x"></i> Close</button>
+</div>
+</div>
+${getOtherIncomeStatementHTML(row)}
+</div>
+</div>`);
+lucide.createIcons();
+}
+async function downloadOtherIncomeStatement(id){
+const row=otherIncomeRows.find(item=>String(item.id)===String(id));
+if(!row){
+showToast("Other Income record not found");
+return;
+}
+if(!window.jspdf||!window.jspdf.jsPDF){
+showToast("PDF library not loaded");
+return;
+}
+try{
+showToast("Preparing Other Income PDF...");
+const data=getOtherIncomeStatementData(row);
+const{jsPDF}=window.jspdf;
+const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+const money=value=>"Rs. "+Number(value||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+const month=formatSalaryMonth(data.month);
+doc.setTextColor(21,44,73);
+doc.setFont("helvetica","bold");
+doc.setFontSize(18);
+doc.text("MY PAISA",105,18,{align:"center"});
+doc.setFontSize(12);
+doc.text("OTHER INCOME STATEMENT",105,25,{align:"center"});
+doc.setFont("helvetica","normal");
+doc.setFontSize(9);
+doc.setTextColor(96,112,132);
+doc.text(`${month} | Received: ${formatDate(row.income_date)}`,105,31,{align:"center"});
+doc.setDrawColor(30,58,95);
+doc.setLineWidth(.6);
+doc.line(15,36,195,36);
+doc.autoTable({
+startY:43,
+theme:"grid",
+styles:{font:"helvetica",fontSize:9,cellPadding:3,textColor:[29,45,68],lineColor:[207,216,229],lineWidth:.25},
+columnStyles:{0:{fillColor:[243,246,250],fontStyle:"bold"},2:{fillColor:[243,246,250],fontStyle:"bold"}},
+body:[
+["Income Source",row.source||"-","Income Month",month],
+["Received Date",formatDate(row.income_date),"Entry Amount",money(row.amount)],
+["Note",row.note||"-","Available Balance",money(data.balance)]
+]
+});
+doc.autoTable({
+startY:doc.lastAutoTable.finalY+5,
+theme:"grid",
+styles:{font:"helvetica",fontSize:8.5,halign:"center",cellPadding:3,lineColor:[207,216,229],lineWidth:.25},
+head:[["Total Income","Expense","Saving","Balance"]],
+body:[[money(data.totalIncome),money(data.totalExpense),money(data.totalSaving),money(data.balance)]],
+headStyles:{fillColor:[243,246,250],textColor:[83,101,125],fontStyle:"bold"}
+});
+doc.setFont("helvetica","bold");
+doc.setTextColor(30,41,59);
+doc.setFontSize(11);
+doc.text("EXPENSES FROM OTHER INCOME",15,doc.lastAutoTable.finalY+9);
+doc.autoTable({
+startY:doc.lastAutoTable.finalY+12,
+theme:"grid",
+styles:{font:"helvetica",fontSize:8.5,cellPadding:3,lineColor:[207,216,229],lineWidth:.25},
+head:[["Date","Category","Note","Amount"]],
+body:data.expenses.length?data.expenses.map(item=>[
+formatDate(item.expense_date),
+item.category||"-",
+item.note||"-",
+"-"+money(item.amount)
+]):[["-","No expenses","-",money(0)]],
+columnStyles:{3:{halign:"right"}},
+headStyles:{fillColor:[237,242,247],textColor:[50,68,93]}
+});
+doc.setFont("helvetica","bold");
+doc.setTextColor(30,41,59);
+doc.setFontSize(11);
+doc.text("SAVINGS FROM OTHER INCOME",15,doc.lastAutoTable.finalY+9);
+doc.autoTable({
+startY:doc.lastAutoTable.finalY+12,
+theme:"grid",
+styles:{font:"helvetica",fontSize:8.5,cellPadding:3,lineColor:[207,216,229],lineWidth:.25},
+head:[["Date","Purpose","Note","Amount"]],
+body:data.savings.length?data.savings.map(item=>[
+formatDate(item.saving_date),
+item.source||"-",
+item.note||"-",
+money(item.amount)
+]):[["-","No savings","-",money(0)]],
+columnStyles:{3:{halign:"right"}},
+headStyles:{fillColor:[237,242,247],textColor:[50,68,93]}
+});
+const balanceY=doc.lastAutoTable.finalY+8;
+doc.setFillColor(238,251,245);
+doc.setDrawColor(27,157,107);
+doc.setLineWidth(.6);
+doc.rect(15,balanceY,180,15,"FD");
+doc.setFont("helvetica","bold");
+doc.setTextColor(54,82,104);
+doc.setFontSize(10);
+doc.text("AVAILABLE OTHER INCOME",20,balanceY+9.5);
+doc.setTextColor(17,132,88);
+doc.setFontSize(15);
+doc.text(money(data.balance),190,balanceY+10,{align:"right"});
+doc.setDrawColor(219,227,237);
+doc.line(15,balanceY+23,195,balanceY+23);
+doc.setFontSize(7.5);
+doc.setTextColor(135,147,164);
+doc.text("Computer generated Other Income statement - My Paisa",105,balanceY+28,{align:"center"});
+const source=(row.source||"Other-Income").replace(/[^a-z0-9]+/gi,"-");
+const fileMonth=(data.month||"Statement").replace(/[^a-z0-9]+/gi,"-");
+doc.save(`Other-Income-${source}-${fileMonth}.pdf`);
+showToast("Other Income PDF downloaded");
+}catch(error){
+console.error(error);
+showToast("PDF download failed");
+}
+}
+function openOtherIncomeModal(){
+openTransactionModal("salary");
+document.getElementById("incomeSourceMode").value="other";
+changeIncomeSourceMode();
+}
 function renderSalaryPage() {
 
   const section =
@@ -5382,7 +6167,43 @@ function renderSalaryPage() {
   lucide.createIcons();
 
 }
-
+function editSalary(id){
+const row=salaryRows.find(item=>String(item.id)===String(id));
+if(!row)return;
+openTransactionModal("salary");
+editingSalaryId=row.id;
+document.getElementById("modalTitle").textContent="Edit Salary";
+document.getElementById("transactionSubmitBtn").textContent="Update Salary";
+document.getElementById("salaryMonth").value=row.salary_month||"";
+document.getElementById("transactionDate").value=row.salary_date||"";
+document.getElementById("salaryEmployeeName").value=row.employee_name||"Ajay Kewat";
+document.getElementById("salaryEmployeeId").value=row.employee_id||"10731";
+document.getElementById("salaryDesignation").value=row.designation||"TB-DBW";
+document.getElementById("salaryCompany").value=row.company_name||"MUNITIONS INDIA LTD";
+document.getElementById("basicSalary").value=Number(row.basic_salary||0);
+const daRate=Number(row.da_rate??60);
+document.getElementById("daRate").value=["60","50","40","30"].includes(String(daRate))?String(daRate):"custom";
+document.getElementById("daCustomRate").value=daRate;
+const hraRate=Number(row.hra_rate??20);
+document.getElementById("hraRate").value=["20","15","10"].includes(String(hraRate))?String(hraRate):"custom";
+document.getElementById("hraCustomRate").value=hraRate;
+document.getElementById("otherAllowance").value=Number(row.other_allowance||0);
+document.getElementById("overtimeEligibility").value=row.overtime_eligible?"yes":"no";
+document.getElementById("overtimeSalary").value=Number(row.overtime||0);
+document.getElementById("pfEnabled").value=row.pf_enabled===false?"off":"on";
+document.getElementById("employeePFRate").value=Number(row.employee_pf_rate??12);
+document.getElementById("employerPFRate").value=Number(row.employer_pf_rate??12);
+document.getElementById("pfInterestRate").value=Number(row.pf_interest_rate??8);
+document.getElementById("esicApplicable").value=row.esic_applicable?"yes":"no";
+document.getElementById("esicDeduction").value=Number(row.esic_deduction||0);
+document.getElementById("otherDeductionType").value=row.other_deduction_type||"none";
+document.getElementById("otherDeduction").value=Number(row.other_deduction||0);
+document.getElementById("loanEligible").value=row.loan_eligible?"yes":"no";
+document.getElementById("loanDeduction").value=Number(row.loan_deduction||0);
+document.getElementById("note").value=row.note||"";
+updateSalaryFieldStates();
+loadSalaryAttendanceFromMonth();
+}
 
 function renderSalaryTable() {
 
@@ -5412,78 +6233,277 @@ function renderSalaryTable() {
 
   }
 
-  return `
-
-    <div class="data-card">
-
-      <div class="data-card-header">
-        <h3>Salary History</h3>
-      </div>
-
-      <div class="data-table-wrap">
-
-        <table class="data-table">
-
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Source</th>
-              <th>Note</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-
-          <tbody>
-
-            ${salaryRows
-              .map(row => `
-
-                <tr>
-
-                  <td>
-                    ${formatDate(
-                      row.salary_date
-                    )}
-                  </td>
-
-                  <td>
-                    <strong>
-                      ${escapeHTML(
-                        row.source
-                      )}
-                    </strong>
-                  </td>
-
-                  <td>
-                    ${escapeHTML(
-                      row.note || "-"
-                    )}
-                  </td>
-
-                  <td class="amount-green">
-                    ${formatMoney(
-                      row.amount
-                    )}
-                  </td>
-
-                </tr>
-
-              `)
-              .join("")}
-
-          </tbody>
-
-        </table>
-
-      </div>
-
-    </div>
-
-  `;
-
+ return `
+<div class="data-card salary-history-card">
+<div class="data-card-header">
+<h3>Salary History</h3>
+</div>
+<div class="salary-history-wrap">
+<table class="salary-history-table">
+<thead>
+<tr>
+<th>Pay Date</th>
+<th>Salary Month</th>
+<th>Employee</th>
+<th>Employee ID</th>
+<th>Designation</th>
+<th>Company</th>
+<th>Basic</th>
+<th>DA</th>
+<th>HRA</th>
+<th>Other Allowance</th>
+<th>Overtime</th>
+<th>Gross</th>
+<th>Employee PF</th>
+<th>Employer PF</th>
+<th>ESIC</th>
+<th>Other Deduction</th>
+<th>Loan</th>
+<th>Total Deduction</th>
+<th>Working Days</th>
+<th>Present</th>
+<th>Absent</th>
+<th>Leave</th>
+<th>Net Salary</th>
+<th>Note</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+${salaryRows.map(row=>`
+<tr>
+<td>${formatDate(row.salary_date)}</td>
+<td>${escapeHTML(row.salary_month||"-")}</td>
+<td>${escapeHTML(row.employee_name||"-")}</td>
+<td>${escapeHTML(row.employee_id||"-")}</td>
+<td>${escapeHTML(row.designation||"-")}</td>
+<td>${escapeHTML(row.company_name||"-")}</td>
+<td>${formatMoney(Number(row.basic_salary||0))}</td>
+<td>${formatMoney(Number(row.da||0))}</td>
+<td>${formatMoney(Number(row.hra||0))}</td>
+<td>${formatMoney(Number(row.other_allowance||0))}</td>
+<td>${row.overtime_eligible?formatMoney(Number(row.overtime||0)):"Not Eligible"}</td>
+<td>${formatMoney(Number(row.gross_salary||0))}</td>
+<td>${row.pf_enabled===false?"PF OFF":formatMoney(Number(row.pf_deduction||0))}</td>
+<td>${row.pf_enabled===false?"PF OFF":formatMoney(Number(row.employer_pf||0))}</td>
+<td>${row.esic_applicable?formatMoney(Number(row.esic_deduction||0)):"N/A"}</td>
+<td>${row.other_deduction_type==="none"?"None":formatMoney(Number(row.other_deduction||0))}</td>
+<td>${row.loan_eligible?formatMoney(Number(row.loan_deduction||0)):"Not Eligible"}</td>
+<td>${formatMoney(Number(row.total_deduction||0))}</td>
+<td>${Number(row.working_days||0)}</td>
+<td>${Number(row.present_days||0)}</td>
+<td>${Number(row.absent_days||0)}</td>
+<td>${Number(row.leave_days||0)}</td>
+<td class="amount-green">${formatMoney(Number(row.amount||0))}</td>
+<td>${escapeHTML(row.note||"-")}</td>
+<td>
+<div class="salary-slip-actions">
+<button type="button" class="salary-slip-btn view" onclick="viewSalarySlip('${row.id}')"><i data-lucide="eye"></i> View</button>
+<button type="button" class="salary-slip-btn download" onclick="downloadSalarySlip('${row.id}')"><i data-lucide="download"></i> PDF</button>
+<button type="button" class="salary-slip-btn delete" onclick="deleteAllTransaction('salary','${row.id}')"><i data-lucide="trash-2"></i> Delete</button>
+</div>
+</td>
+</tr>
+`).join("")}
+</tbody>
+</table>
+</div>
+</div>
+`;
 }
-
-
+function formatSalaryMonth(value){
+if(!value)return"-";
+const parts=value.split("-");
+if(parts.length!==2)return value;
+const date=new Date(Number(parts[0]),Number(parts[1])-1,1);
+return date.toLocaleDateString("en-IN",{month:"long",year:"numeric"});
+}
+function getSalarySlipHTML(row){
+const employeePF=row.pf_enabled===false?0:Number(row.pf_deduction||0);
+const employerPF=row.pf_enabled===false?0:Number(row.employer_pf||0);
+const esic=row.esic_applicable?Number(row.esic_deduction||0):0;
+const otherDeduction=row.other_deduction_type!=="none"?Number(row.other_deduction||0):0;
+const loan=row.loan_eligible?Number(row.loan_deduction||0):0;
+const overtime=row.overtime_eligible?Number(row.overtime||0):0;
+return `
+<div class="salary-slip-document" id="salarySlipDocument">
+<div class="slip-header">
+<h1>${escapeHTML(row.company_name||"MUNITIONS INDIA LTD")}</h1>
+<h2>SALARY SLIP</h2>
+<p>${formatSalaryMonth(row.salary_month)} | Pay Date: ${formatDate(row.salary_date)}</p>
+</div>
+<div class="slip-title">Employee Pay Statement</div>
+<div class="slip-info-grid">
+<div class="slip-info-item"><div class="slip-info-label">Employee Name</div><div class="slip-info-value">${escapeHTML(row.employee_name||"-")}</div></div>
+<div class="slip-info-item"><div class="slip-info-label">Employee ID</div><div class="slip-info-value">${escapeHTML(row.employee_id||"-")}</div></div>
+<div class="slip-info-item"><div class="slip-info-label">Department / Designation</div><div class="slip-info-value">${escapeHTML(row.designation||"-")}</div></div>
+<div class="slip-info-item"><div class="slip-info-label">Salary Month</div><div class="slip-info-value">${formatSalaryMonth(row.salary_month)}</div></div>
+</div>
+<div class="slip-attendance">
+<div class="slip-att-box"><span>Working Days</span><strong>${Number(row.working_days||0)}</strong></div>
+<div class="slip-att-box"><span>Present Days</span><strong>${Number(row.present_days||0)}</strong></div>
+<div class="slip-att-box"><span>Absent Days</span><strong>${Number(row.absent_days||0)}</strong></div>
+<div class="slip-att-box"><span>Leave Days</span><strong>${Number(row.leave_days||0)}</strong></div>
+</div>
+<table class="slip-pay-table">
+<thead>
+<tr><th>Earnings</th><th>Amount</th><th>Deductions</th><th>Amount</th></tr>
+</thead>
+<tbody>
+<tr><td>Basic Salary</td><td>${formatMoney(Number(row.basic_salary||0))}</td><td>Employee PF</td><td>${row.pf_enabled===false?"PF OFF":formatMoney(employeePF)}</td></tr>
+<tr><td>DA</td><td>${formatMoney(Number(row.da||0))}</td><td>ESIC</td><td>${row.esic_applicable?formatMoney(esic):"N/A"}</td></tr>
+<tr><td>HRA</td><td>${formatMoney(Number(row.hra||0))}</td><td>Professional Tax / Other</td><td>${row.other_deduction_type==="none"?"None":formatMoney(otherDeduction)}</td></tr>
+<tr><td>Other Allowance</td><td>${formatMoney(Number(row.other_allowance||0))}</td><td>Advance / Loan</td><td>${row.loan_eligible?formatMoney(loan):"Not Eligible"}</td></tr>
+<tr><td>Overtime</td><td>${row.overtime_eligible?formatMoney(overtime):"Not Eligible"}</td><td>Employer PF</td><td>${row.pf_enabled===false?"PF OFF":formatMoney(employerPF)}</td></tr>
+<tr class="slip-total-row"><td>Gross Earnings</td><td>${formatMoney(Number(row.gross_salary||0))}</td><td>Total Deduction</td><td>${formatMoney(Number(row.total_deduction||0))}</td></tr>
+</tbody>
+</table>
+<div class="slip-net"><span>NET SALARY</span><strong>${formatMoney(Number(row.amount||0))}</strong></div>
+${row.note?`<div class="slip-note"><strong>Note:</strong> ${escapeHTML(row.note)}</div>`:""}
+<div class="slip-footer">Computer generated salary statement • My Paisa</div>
+</div>
+`;
+}
+function viewSalarySlip(id){
+const row=salaryRows.find(item=>String(item.id)===String(id));
+if(!row){
+showToast("Salary record not found");
+return;
+}
+document.getElementById("salarySlipOverlay")?.remove();
+document.body.insertAdjacentHTML("beforeend",`
+<div class="salary-slip-overlay" id="salarySlipOverlay">
+<div class="salary-slip-window">
+<div class="salary-slip-toolbar">
+<strong>Salary Slip - ${escapeHTML(row.employee_name||"Employee")}</strong>
+<div class="salary-slip-toolbar-actions">
+<button type="button" class="slip-download" onclick="downloadSalarySlip('${row.id}')"><i data-lucide="download"></i> Download PDF</button>
+<button type="button" onclick="closeSalarySlip()"><i data-lucide="x"></i> Close</button>
+</div>
+</div>
+${getSalarySlipHTML(row)}
+</div>
+</div>
+`);
+lucide.createIcons();
+}
+function closeSalarySlip(){
+document.getElementById("salarySlipOverlay")?.remove();
+}
+async function downloadSalarySlip(id){
+const row=salaryRows.find(item=>String(item.id)===String(id));
+if(!row){
+showToast("Salary record not found");
+return;
+}
+if(!window.jspdf||!window.jspdf.jsPDF){
+showToast("PDF library not loaded");
+return;
+}
+try{
+showToast("Preparing salary slip PDF...");
+const{jsPDF}=window.jspdf;
+const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+const money=value=>"Rs. "+Number(value||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+const salaryMonth=formatSalaryMonth(row.salary_month);
+const employeePF=row.pf_enabled===false?0:Number(row.pf_deduction||0);
+const employerPF=row.pf_enabled===false?0:Number(row.employer_pf||0);
+const esic=row.esic_applicable?Number(row.esic_deduction||0):0;
+const otherDeduction=row.other_deduction_type!=="none"?Number(row.other_deduction||0):0;
+const loan=row.loan_eligible?Number(row.loan_deduction||0):0;
+const overtime=row.overtime_eligible?Number(row.overtime||0):0;
+doc.setTextColor(21,44,73);
+doc.setFont("helvetica","bold");
+doc.setFontSize(18);
+doc.text(row.company_name||"MUNITIONS INDIA LTD",105,18,{align:"center"});
+doc.setFontSize(12);
+doc.text("SALARY SLIP",105,25,{align:"center"});
+doc.setFont("helvetica","normal");
+doc.setFontSize(9);
+doc.setTextColor(96,112,132);
+doc.text(`${salaryMonth} | Pay Date: ${formatDate(row.salary_date)}`,105,31,{align:"center"});
+doc.setDrawColor(30,58,95);
+doc.setLineWidth(.6);
+doc.line(15,36,195,36);
+doc.setFont("helvetica","bold");
+doc.setFontSize(12);
+doc.setTextColor(30,41,59);
+doc.text("EMPLOYEE PAY STATEMENT",105,44,{align:"center"});
+doc.autoTable({
+startY:49,
+theme:"grid",
+styles:{font:"helvetica",fontSize:9,cellPadding:3,textColor:[29,45,68],lineColor:[207,216,229],lineWidth:.25},
+columnStyles:{0:{fillColor:[243,246,250],fontStyle:"bold",cellWidth:38},1:{cellWidth:52},2:{fillColor:[243,246,250],fontStyle:"bold",cellWidth:38},3:{cellWidth:52}},
+body:[
+["Employee Name",row.employee_name||"-","Employee ID",row.employee_id||"-"],
+["Designation",row.designation||"-","Salary Month",salaryMonth]
+]
+});
+doc.autoTable({
+startY:doc.lastAutoTable.finalY+5,
+theme:"grid",
+styles:{font:"helvetica",fontSize:8.5,halign:"center",cellPadding:3,lineColor:[207,216,229],lineWidth:.25},
+head:[["Working Days","Present Days","Absent Days","Leave Days"]],
+body:[[Number(row.working_days||0),Number(row.present_days||0),Number(row.absent_days||0),Number(row.leave_days||0)]],
+headStyles:{fillColor:[243,246,250],textColor:[83,101,125],fontStyle:"bold"}
+});
+doc.autoTable({
+startY:doc.lastAutoTable.finalY+6,
+theme:"grid",
+styles:{font:"helvetica",fontSize:9,cellPadding:3,lineColor:[207,216,229],lineWidth:.25,textColor:[38,56,79]},
+head:[["Earnings","Amount","Deductions","Amount"]],
+body:[
+["Basic Salary",money(row.basic_salary),"Employee PF",row.pf_enabled===false?"PF OFF":money(employeePF)],
+["DA",money(row.da),"ESIC",row.esic_applicable?money(esic):"N/A"],
+["HRA",money(row.hra),"Professional Tax / Other",row.other_deduction_type==="none"?"None":money(otherDeduction)],
+["Other Allowance",money(row.other_allowance),"Advance / Loan",row.loan_eligible?money(loan):"Not Eligible"],
+["Overtime",row.overtime_eligible?money(overtime):"Not Eligible","Employer PF",row.pf_enabled===false?"PF OFF":money(employerPF)],
+["Gross Earnings",money(row.gross_salary),"Total Deduction",money(row.total_deduction)]
+],
+headStyles:{fillColor:[237,242,247],textColor:[50,68,93],fontStyle:"bold"},
+columnStyles:{1:{halign:"right"},3:{halign:"right"}},
+didParseCell:data=>{
+if(data.section==="body"&&data.row.index===5){
+data.cell.styles.fontStyle="bold";
+data.cell.styles.fillColor=[247,249,252];
+}
+}
+});
+const netY=doc.lastAutoTable.finalY+7;
+doc.setFillColor(238,251,245);
+doc.setDrawColor(27,157,107);
+doc.setLineWidth(.6);
+doc.rect(15,netY,180,15,"FD");
+doc.setFont("helvetica","bold");
+doc.setTextColor(54,82,104);
+doc.setFontSize(10);
+doc.text("NET SALARY",20,netY+9.5);
+doc.setTextColor(17,132,88);
+doc.setFontSize(15);
+doc.text(money(row.amount),190,netY+10,{align:"right"});
+let footerY=netY+22;
+if(row.note){
+doc.setFont("helvetica","normal");
+doc.setTextColor(80,96,118);
+doc.setFontSize(8.5);
+const noteLines=doc.splitTextToSize(`Note: ${row.note}`,175);
+doc.text(noteLines,17,footerY);
+footerY+=noteLines.length*4;
+}
+doc.setDrawColor(219,227,237);
+doc.line(15,footerY+3,195,footerY+3);
+doc.setFontSize(7.5);
+doc.setTextColor(135,147,164);
+doc.text("Computer generated salary statement - My Paisa",105,footerY+8,{align:"center"});
+const employee=(row.employee_name||"Employee").replace(/[^a-z0-9]+/gi,"-");
+const month=(row.salary_month||"Salary").replace(/[^a-z0-9]+/gi,"-");
+doc.save(`Salary-Slip-${employee}-${month}.pdf`);
+showToast("Salary slip downloaded");
+}catch(error){
+console.error(error);
+showToast("PDF download failed");
+}
+}
 /* ========================================
    EXPENSE PAGE
 ======================================== */
@@ -5612,16 +6632,15 @@ function renderExpenseTable() {
       <div class="data-table-wrap">
 
         <table class="data-table">
-
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Category</th>
-              <th>Note</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-
+<thead>
+<tr>
+<th>Date</th>
+<th>Category</th>
+<th>Paid From</th>
+<th>Note</th>
+<th>Amount</th>
+</tr>
+</thead>
           <tbody>
 
             ${expenseRows
@@ -5636,18 +6655,14 @@ function renderExpenseTable() {
                   </td>
 
                   <td>
-                    <strong>
-                      ${escapeHTML(
-                        row.category
-                      )}
-                    </strong>
-                  </td>
-
-                  <td>
-                    ${escapeHTML(
-                      row.note || "-"
-                    )}
-                  </td>
+<strong>${escapeHTML(row.category)}</strong>
+</td>
+<td>
+<strong>${row.funding_source==="other_income"?"Other Income":"MUNITIONS Salary"}</strong>
+</td>
+<td>
+${escapeHTML(row.note||"-")}
+</td>
 
                   <td class="amount-red">
                     ${formatMoney(
@@ -5794,12 +6809,14 @@ function renderSavingTable() {
         <table class="data-table">
 
           <thead>
-            <tr>
-              <th>Date</th>
-              <th>Source</th>
-              <th>Note</th>
-              <th>Amount</th>
-            </tr>
+          <tr>
+<th>Date</th>
+<th>Purpose</th>
+<th>Saved From</th>
+<th>Note</th>
+<th>Amount</th>
+<th>Action</th>
+</tr>
           </thead>
 
           <tbody>
@@ -5816,26 +6833,24 @@ function renderSavingTable() {
                   </td>
 
                   <td>
-                    <strong>
-                      ${escapeHTML(
-                        row.source
-                      )}
-                    </strong>
-                  </td>
+<strong>${escapeHTML(row.source)}</strong>
+</td>
+<td>
+<strong>${
+row.funding_source==="other_income"
+?"Other Income"
+:row.funding_source==="external"
+?"Outside Money"
+:"MUNITIONS Salary"
+}</strong>
+</td>
+<td>
+${escapeHTML(row.note||"-")}
+</td>
 
-                  <td>
-                    ${escapeHTML(
-                      row.note || "-"
-                    )}
-                  </td>
-
-                  <td class="amount-purple">
-                    ${formatMoney(
-                      row.amount
-                    )}
-                  </td>
-
-                </tr>
+                  <td class="amount-green">${formatMoney(row.amount)}</td>
+<td><button type="button" class="salary-edit-btn" onclick="editSalary('${row.id}')"><i data-lucide="pencil"></i> Edit</button></td>
+</tr>
 
               `)
               .join("")}
@@ -5881,87 +6896,217 @@ function renderAllTransactionsPage(){
     </div>
     <div class="ledger-card">
       <div class="ledger-table-wrap">
-        <table class="ledger-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Transaction</th>
-              <th>Category / Note</th>
-              <th>Source</th>
-              <th>Amount</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="allTransactionsList"></tbody>
-        </table>
+        <table class="ledger-table" id="allTransactionsTable">
+<thead id="allTransactionsHead"></thead>
+<tbody id="allTransactionsList"></tbody>
+</table>
       </div>
     </div>
   `;
   allTransactionFilter="all";
-  renderAllTransactionsList(transactions);
-  lucide.createIcons();
+renderAllTransactionsHeader();
+renderAllTransactionsList(transactions);
+lucide.createIcons();
 }
 function setAllTransactionFilter(type,button){
-  allTransactionFilter=type;
-  document.querySelectorAll(".ledger-tab").forEach(tab=>tab.classList.remove("active"));
-  if(button)button.classList.add("active");
-  filterAllTransactions();
+allTransactionFilter=type;
+document.querySelectorAll(".ledger-tab").forEach(tab=>tab.classList.remove("active"));
+if(button)button.classList.add("active");
+renderAllTransactionsHeader();
+filterAllTransactions();
+}
+function renderAllTransactionsHeader(){
+const head=document.getElementById("allTransactionsHead");
+const table=document.getElementById("allTransactionsTable");
+if(!head||!table)return;
+
+if(allTransactionFilter==="salary"){
+table.classList.add("salary-ledger-mode");
+head.innerHTML=`
+<tr>
+<th>Pay Date</th>
+<th>Type</th>
+<th>Salary Month</th>
+<th>Employee</th>
+<th>Employee ID</th>
+<th>Designation</th>
+<th>Company</th>
+<th>Basic</th>
+<th>DA</th>
+<th>HRA</th>
+<th>Other Allowance</th>
+<th>Overtime</th>
+<th>Gross</th>
+<th>Employee PF</th>
+<th>Employer PF</th>
+<th>ESIC</th>
+<th>Other Deduction</th>
+<th>Loan</th>
+<th>Total Deduction</th>
+<th>Working Days</th>
+<th>Present</th>
+<th>Absent</th>
+<th>Leave</th>
+<th>Net Salary</th>
+<th>Note</th>
+<th>Action</th>
+</tr>`;
+return;
+}
+
+table.classList.remove("salary-ledger-mode");
+
+if(allTransactionFilter==="expense"){
+head.innerHTML=`
+<tr>
+<th>Date</th>
+<th>Type</th>
+<th>Category</th>
+<th>Note</th>
+<th>Amount</th>
+<th>Action</th>
+</tr>`;
+return;
+}
+
+if(allTransactionFilter==="saving"){
+head.innerHTML=`
+<tr>
+<th>Date</th>
+<th>Type</th>
+<th>Source</th>
+<th>Note</th>
+<th>Amount</th>
+<th>Action</th>
+</tr>`;
+return;
+}
+
+head.innerHTML=`
+<tr>
+<th>Date</th>
+<th>Type</th>
+<th>Transaction</th>
+<th>Source</th>
+<th>Note</th>
+<th>Amount</th>
+<th>Action</th>
+</tr>`;
 }
 function filterAllTransactions(){
   const search=(document.getElementById("transactionSearch")?.value||"").trim().toLowerCase();
   const filtered=transactions.filter(item=>{
     const typeMatch=allTransactionFilter==="all"||item.type===allTransactionFilter;
-    const searchable=[
-      item.type,
-      item.category,
-      item.note,
-      item.date,
-      item.amount,
-      formatMoney(item.amount)
-    ].join(" ").toLowerCase();
+   const searchable=[
+item.type,item.category,item.note,item.date,item.amount,formatMoney(item.amount),
+item.salary_month,item.employee_name,item.employee_id,item.designation,item.company_name,
+item.basic_salary,item.da_rate,item.da,item.hra_rate,item.hra,item.other_allowance,
+item.overtime,item.gross_salary,item.pf_deduction,item.employer_pf,item.pf_interest_rate,
+item.esic_deduction,item.other_deduction,item.loan_deduction,item.total_deduction,
+item.working_days,item.present_days,item.absent_days,item.leave_days
+].join(" ").toLowerCase();
     return typeMatch&&searchable.includes(search);
   });
   renderAllTransactionsList(filtered);
 }
 function renderAllTransactionsList(rows){
-  const container=document.getElementById("allTransactionsList");
-  if(!container)return;
-  if(!rows.length){
-    container.innerHTML=`
-      <tr>
-        <td colspan="6">
-          <div class="transaction-empty">
-            <i data-lucide="search-x"></i>
-            <strong>No transactions found</strong>
-            <span>Try another search or filter.</span>
-          </div>
-        </td>
-      </tr>
-    `;
-    lucide.createIcons();
-    return;
-  }
-  const typeMap={
-    salary:{label:"Income",source:"Salary",className:"all-type-salary",prefix:"+"},
-    expense:{label:"Expense",source:"Expense",className:"all-type-expense",prefix:"-"},
-    saving:{label:"Saving",source:"Savings",className:"all-type-saving",prefix:""}
-  };
-  container.innerHTML=rows.map(item=>{
-    const config=typeMap[item.type];
-    return `
-      <tr>
-        <td>${formatDate(item.date)}</td>
-        <td><span class="ledger-badge ${config.className}">${config.label}</span></td>
-        <td>
-          <strong class="ledger-category">${escapeHTML(item.category||config.label)}</strong>
-          <small>${escapeHTML(item.note||"No note")}</small>
-        </td>
-        <td>${config.source}</td>
-        <td class="ledger-amount ${config.className}">${config.prefix}${formatMoney(item.amount)}</td>
-        <td><button class="ledger-delete-btn" onclick="deleteAllTransaction('${item.type}','${item.id}')">Delete</button></td>
-      </tr>
-    `;
-  }).join("");
+const container=document.getElementById("allTransactionsList");
+if(!container)return;
+
+if(!rows.length){
+const colspan=allTransactionFilter==="salary"?26:allTransactionFilter==="all"?7:6;
+container.innerHTML=`
+<tr>
+<td colspan="${colspan}">
+<div class="transaction-empty">
+<i data-lucide="search-x"></i>
+<strong>No transactions found</strong>
+<span>Try another search or filter.</span>
+</div>
+</td>
+</tr>`;
+lucide.createIcons();
+return;
+}
+
+const typeMap={
+salary:{label:"Salary",source:"Salary",className:"all-type-salary",prefix:"+"},
+other_income:{label:"Other Income",source:"Other Income",className:"all-type-salary",prefix:"+"},
+expense:{label:"Expense",source:"Expense",className:"all-type-expense",prefix:"-"},
+saving:{label:"Saving",source:"Savings",className:"all-type-saving",prefix:""}
+};
+container.innerHTML=rows.map(item=>{
+const config=typeMap[item.type];
+
+if(allTransactionFilter==="salary"&&item.type==="salary"){
+return `
+<tr>
+<td>${formatDate(item.date)}</td>
+<td><span class="ledger-badge ${config.className}">Salary</span></td>
+<td>${escapeHTML(item.salary_month||"-")}</td>
+<td>${escapeHTML(item.employee_name||"-")}</td>
+<td>${escapeHTML(item.employee_id||"-")}</td>
+<td>${escapeHTML(item.designation||"-")}</td>
+<td>${escapeHTML(item.company_name||"-")}</td>
+<td>${formatMoney(item.basic_salary)}</td>
+<td>${formatMoney(item.da)}</td>
+<td>${formatMoney(item.hra)}</td>
+<td>${formatMoney(item.other_allowance)}</td>
+<td>${item.overtime_eligible?formatMoney(item.overtime):"Not Eligible"}</td>
+<td>${formatMoney(item.gross_salary)}</td>
+<td>${item.pf_enabled?formatMoney(item.pf_deduction):"PF OFF"}</td>
+<td>${item.pf_enabled?formatMoney(item.employer_pf):"PF OFF"}</td>
+<td>${item.esic_applicable?formatMoney(item.esic_deduction):"N/A"}</td>
+<td>${item.other_deduction_type==="none"?"None":formatMoney(item.other_deduction)}</td>
+<td>${item.loan_eligible?formatMoney(item.loan_deduction):"Not Eligible"}</td>
+<td>${formatMoney(item.total_deduction)}</td>
+<td>${item.working_days}</td>
+<td>${item.present_days}</td>
+<td>${item.absent_days}</td>
+<td>${item.leave_days}</td>
+<td class="ledger-amount all-type-salary">+${formatMoney(item.amount)}</td>
+<td>${escapeHTML(item.note||"-")}</td>
+<td><button class="ledger-delete-btn" onclick="deleteAllTransaction('${item.type}','${item.id}')">Delete</button></td>
+</tr>`;
+}
+
+if(allTransactionFilter==="expense"&&item.type==="expense"){
+return `
+<tr>
+<td>${formatDate(item.date)}</td>
+<td><span class="ledger-badge ${config.className}">Expense</span></td>
+<td>${escapeHTML(item.category||"Expense")}</td>
+<td>${escapeHTML(item.note||"-")}</td>
+<td class="ledger-amount ${config.className}">-${formatMoney(item.amount)}</td>
+<td><button class="ledger-delete-btn" onclick="deleteAllTransaction('${item.type}','${item.id}')">Delete</button></td>
+</tr>`;
+}
+
+if(allTransactionFilter==="saving"&&item.type==="saving"){
+return `
+<tr>
+<td>${formatDate(item.date)}</td>
+<td><span class="ledger-badge ${config.className}">Saving</span></td>
+<td>${escapeHTML(item.category||"Saving")}</td>
+<td>${escapeHTML(item.note||"-")}</td>
+<td class="ledger-amount ${config.className}">${formatMoney(item.amount)}</td>
+<td><button class="ledger-delete-btn" onclick="deleteAllTransaction('${item.type}','${item.id}')">Delete</button></td>
+</tr>`;
+}
+
+return `
+<tr>
+<td>${formatDate(item.date)}</td>
+<td><span class="ledger-badge ${config.className}">${config.label}</span></td>
+<td><strong class="ledger-category">${escapeHTML(item.category||config.label)}</strong></td>
+<td>${config.source}</td>
+<td>${escapeHTML(item.note||"-")}</td>
+<td class="ledger-amount ${config.className}">${config.prefix}${formatMoney(item.amount)}</td>
+<td><button class="ledger-delete-btn" onclick="deleteAllTransaction('${item.type}','${item.id}')">Delete</button></td>
+</tr>`;
+}).join("");
+
+lucide.createIcons();
 }
 async function deleteAllTransaction(type,id){
   if(!confirm("Delete this transaction?"))return;
@@ -5969,7 +7114,7 @@ async function deleteAllTransaction(type,id){
     showToast("Please login first");
     return;
   }
-  const table=type==="salary"?"salary_entries":type==="expense"?"expenses":type==="saving"?"savings":null;
+ const table=type==="salary"?"salary_entries":type==="other_income"?"other_income":type==="expense"?"expenses":type==="saving"?"savings":null;
   if(!table){
     showToast("This transaction type cannot be deleted");
     return;
@@ -5991,163 +7136,317 @@ async function deleteAllTransaction(type,id){
    PF MANAGE PAGE
 ======================================== */
 function renderPFPage(){
-  const section=document.getElementById("sectionView");
-  section.innerHTML=`
-    <div class="page-head">
-      <div>
-        <h2>PF Manage</h2>
-        <p>Manage your Provident Fund records from one place.</p>
-      </div>
-    </div>
-    <div class="pf-placeholder">
-      <div class="pf-placeholder-icon">
-        <i data-lucide="landmark"></i>
-      </div>
-      <strong>PF Manager Ready</strong>
-      <p>PF database records have not been connected yet. We can add monthly employee PF, employer PF, pension share and balance here next.</p>
-    </div>
-  `;
-  lucide.createIcons();
+const section=document.getElementById("sectionView");
+const pfRows=salaryRows
+.filter(row=>row.pf_enabled!==false&&(Number(row.pf_deduction||0)>0||Number(row.employer_pf||0)>0))
+.sort((a,b)=>String(b.salary_month||"").localeCompare(String(a.salary_month||"")));
+const employeePFTotal=pfRows.reduce((sum,row)=>sum+Number(row.pf_deduction||0),0);
+const employerPFTotal=pfRows.reduce((sum,row)=>sum+Number(row.employer_pf||0),0);
+const contributionBalance=employeePFTotal+employerPFTotal;
+const latestRate=pfRows.length?Number(pfRows[0].pf_interest_rate||0):0;
+section.innerHTML=`
+<div class="page-head">
+<div>
+<h2>PF Manage</h2>
+<p>Provident Fund contribution and balance history from your salary records.</p>
+</div>
+</div>
+<div class="pf-summary-grid">
+<div class="pf-summary-card">
+<small>PF Balance</small>
+<strong>${formatMoney(contributionBalance)}</strong>
+</div>
+<div class="pf-summary-card employee">
+<small>Employee PF</small>
+<strong>${formatMoney(employeePFTotal)}</strong>
+</div>
+<div class="pf-summary-card employer">
+<small>Employer PF</small>
+<strong>${formatMoney(employerPFTotal)}</strong>
+</div>
+<div class="pf-summary-card interest">
+<small>PF Interest Rate</small>
+<strong>${latestRate?latestRate+"%":"-"}</strong>
+</div>
+</div>
+<div class="pf-table-card">
+<div class="pf-table-head">
+<h3>PF Contribution History</h3>
+</div>
+<div class="pf-table-wrap">
+<table class="pf-table">
+<thead>
+<tr>
+<th>Month</th>
+<th>Pay Date</th>
+<th>Basic</th>
+<th>Employee PF</th>
+<th>Employer PF</th>
+<th>Total Addition</th>
+<th>PF Rate</th>
+<th>Running Balance</th>
+</tr>
+</thead>
+<tbody>
+${pfRows.length?(()=>{
+let running=0;
+return [...pfRows].reverse().map(row=>{
+const employeePF=Number(row.pf_deduction||0);
+const employerPF=Number(row.employer_pf||0);
+const monthlyTotal=employeePF+employerPF;
+running+=monthlyTotal;
+return `
+<tr>
+<td><strong>${formatSalaryMonth(row.salary_month)}</strong></td>
+<td>${formatDate(row.salary_date)}</td>
+<td>${formatMoney(Number(row.basic_salary||0))}</td>
+<td>${formatMoney(employeePF)}</td>
+<td>${formatMoney(employerPF)}</td>
+<td><strong>${formatMoney(monthlyTotal)}</strong></td>
+<td>${Number(row.pf_interest_rate||0)}%</td>
+<td><strong>${formatMoney(running)}</strong></td>
+</tr>`;
+}).reverse().join("");
+})():`<tr><td colspan="8" class="pf-empty">No PF salary records found yet.</td></tr>`}
+</tbody>
+</table>
+</div>
+</div>`;
+lucide.createIcons();
 }
 /* ========================================
    REPORTS PAGE
 ======================================== */
 
-function renderReportsPage() {
-
-  const section =
-    document.getElementById(
-      "sectionView"
-    );
-
-  const available =
-    salary -
-    expenses -
-    savings;
-
-  const expensePercent =
-    salary > 0
-      ?
-      Math.min(
-        100,
-        Math.round(
-          expenses /
-          salary *
-          100
-        )
-      )
-      :
-      0;
-
-  const savingPercent =
-    salary > 0
-      ?
-      Math.min(
-        100,
-        Math.round(
-          savings /
-          salary *
-          100
-        )
-      )
-      :
-      0;
-
-  section.innerHTML = `
-
-    <div class="page-head">
-
-      <div>
-        <h2>Reports</h2>
-
-        <p>
-          Current month financial
-          overview.
-        </p>
-      </div>
-
-    </div>
-
-    <div class="section-stats">
-
-      <div class="section-stat">
-        <small>Income</small>
-        <strong>
-          ${formatMoney(salary)}
-        </strong>
-      </div>
-
-      <div class="section-stat">
-        <small>Spent</small>
-        <strong>
-          ${formatMoney(expenses)}
-        </strong>
-      </div>
-
-      <div class="section-stat">
-        <small>Remaining</small>
-        <strong>
-          ${formatMoney(available)}
-        </strong>
-      </div>
-
-    </div>
-
-    <div class="data-card">
-
-      <div class="data-card-header">
-        <h3>
-          Monthly Performance
-        </h3>
-      </div>
-
-      <div style="padding:22px;">
-
-        <div style="margin-bottom:24px;">
-
-          <div class="expense-row">
-            <span>Expenses vs Salary</span>
-            <strong>
-              ${expensePercent}%
-            </strong>
-          </div>
-
-          <div class="report-bar">
-            <div
-              class="report-fill"
-              style="width:${expensePercent}%"
-            ></div>
-          </div>
-
-        </div>
-
-        <div>
-
-          <div class="expense-row">
-            <span>Savings vs Salary</span>
-            <strong>
-              ${savingPercent}%
-            </strong>
-          </div>
-
-          <div class="report-bar">
-            <div
-              class="report-fill"
-              style="width:${savingPercent}%"
-            ></div>
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  `;
-
+function renderReportsPage(){
+const section=document.getElementById("sectionView");
+const getDate=row=>row.salary_date||row.income_date||row.expense_date||row.saving_date||"";
+const matches=row=>{
+const date=getDate(row);
+if(!date)return false;
+if(reportFilterType==="month")return date.slice(0,7)===reportMonth;
+if(reportFilterType==="year")return date.slice(0,4)===reportYear;
+if(reportFilterType==="range")return(!reportStartDate||date>=reportStartDate)&&(!reportEndDate||date<=reportEndDate);
+return true;
+};
+const salaryData=salaryRows.filter(matches);
+const otherData=otherIncomeRows.filter(matches);
+const expenseData=expenseRows.filter(matches);
+const savingData=savingRows.filter(matches);
+const salaryIncome=salaryData.reduce((sum,row)=>sum+Number(row.amount||0),0);
+const outsideIncome=otherData.reduce((sum,row)=>sum+Number(row.amount||0),0);
+const totalExpense=expenseData.reduce((sum,row)=>sum+Number(row.amount||0),0);
+const totalSaving=savingData.reduce((sum,row)=>sum+Number(row.amount||0),0);
+const employeePF=salaryData.reduce((sum,row)=>sum+(row.pf_enabled===false?0:Number(row.pf_deduction||0)),0);
+const employerPF=salaryData.reduce((sum,row)=>sum+(row.pf_enabled===false?0:Number(row.employer_pf||0)),0);
+const totalIncome=salaryIncome+outsideIncome;
+const netCash=totalIncome-totalExpense-totalSaving;
+const graphValues=[salaryIncome,outsideIncome,totalExpense,totalSaving,employeePF];
+const graphMax=Math.max(...graphValues,1);
+const graphHeight=value=>Math.max(3,Math.round(Number(value||0)/graphMax*100));
+const filterTitle=reportFilterType==="month"?formatSalaryMonth(reportMonth):reportFilterType==="year"?reportYear:`${reportStartDate?formatDate(reportStartDate):"Start"} - ${reportEndDate?formatDate(reportEndDate):"End"}`;
+const years=[...new Set([...salaryRows,...otherIncomeRows,...expenseRows,...savingRows].map(row=>getDate(row).slice(0,4)).filter(Boolean))].sort((a,b)=>b.localeCompare(a));
+if(!years.includes(reportYear))years.unshift(reportYear);
+const slips=[
+...salaryData.map(row=>({type:"salary",id:row.id,date:row.salary_date,title:"Salary Slip",source:row.company_name||"MUNITIONS INDIA LTD",amount:Number(row.amount||0),month:row.salary_month||row.salary_date?.slice(0,7)})),
+...otherData.map(row=>({type:"other",id:row.id,date:row.income_date,title:"Other Income Statement",source:row.source||"Other Income",amount:Number(row.amount||0),month:row.income_month||row.income_date?.slice(0,7)}))
+].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+section.innerHTML=`
+<div class="page-head report-head">
+<div>
+<h2>Reports & Statements</h2>
+<p>Review, filter and download your complete financial records.</p>
+</div>
+<div class="report-filter-box">
+<select onchange="changeReportFilterType(this.value)">
+<option value="month" ${reportFilterType==="month"?"selected":""}>Monthly</option>
+<option value="year" ${reportFilterType==="year"?"selected":""}>Yearly</option>
+<option value="range" ${reportFilterType==="range"?"selected":""}>Date Range</option>
+</select>
+${reportFilterType==="month"?`<input type="month" value="${reportMonth}" onchange="reportMonth=this.value;renderReportsPage()">`:""}
+${reportFilterType==="year"?`<select onchange="reportYear=this.value;renderReportsPage()">${years.map(year=>`<option value="${year}" ${year===reportYear?"selected":""}>${year}</option>`).join("")}</select>`:""}
+${reportFilterType==="range"?`<input type="date" value="${reportStartDate}" onchange="reportStartDate=this.value;renderReportsPage()"><input type="date" value="${reportEndDate}" onchange="reportEndDate=this.value;renderReportsPage()">`:""}
+</div>
+</div>
+<div class="report-summary-grid">
+<div class="report-summary-card salary"><small>Salary Credited</small><strong>${formatMoney(salaryIncome)}</strong></div>
+<div class="report-summary-card other"><small>Other Income</small><strong>${formatMoney(outsideIncome)}</strong></div>
+<div class="report-summary-card expense"><small>Expenses</small><strong>${formatMoney(totalExpense)}</strong></div>
+<div class="report-summary-card saving"><small>Savings</small><strong>${formatMoney(totalSaving)}</strong></div>
+<div class="report-summary-card pf"><small>Employee PF</small><strong>${formatMoney(employeePF)}</strong></div>
+<div class="report-summary-card net"><small>Net Cash Change</small><strong>${formatMoney(netCash)}</strong></div>
+</div>
+<div class="report-main-grid">
+<div class="report-card">
+<div class="report-card-head"><div><h3>Selected Period Statement</h3><small>${filterTitle}</small></div></div>
+<div class="report-statement-body">
+<div class="report-line"><span>Salary credited</span><strong>${formatMoney(salaryIncome)}</strong></div>
+<div class="report-line"><span>Other income</span><strong>${formatMoney(outsideIncome)}</strong></div>
+<div class="report-line"><span>Total income</span><strong>${formatMoney(totalIncome)}</strong></div>
+<div class="report-line"><span>Expenses</span><strong>-${formatMoney(totalExpense)}</strong></div>
+<div class="report-line"><span>Savings transfer</span><strong>-${formatMoney(totalSaving)}</strong></div>
+<div class="report-line"><span>Employee PF deduction</span><strong>${formatMoney(employeePF)}</strong></div>
+<div class="report-line total"><span>Net monthly cash change</span><strong>${formatMoney(netCash)}</strong></div>
+<div class="report-line"><span>Employer PF (not cash deduction)</span><strong>${formatMoney(employerPF)}</strong></div>
+<div class="report-actions">
+<button class="report-action-btn primary" onclick="downloadFilteredReportPDF()"><i data-lucide="file-down"></i> Report PDF</button>
+<button class="report-action-btn" onclick="downloadFilteredReportCSV()"><i data-lucide="download"></i> Period CSV</button>
+<button class="report-action-btn dark" onclick="downloadAllTransactionsCSV()"><i data-lucide="database"></i> All Transactions</button>
+</div>
+</div>
+</div>
+<div class="report-card">
+<div class="report-card-head"><div><h3>Financial Graph</h3><small>${filterTitle}</small></div></div>
+<div class="report-chart">
+<div class="report-chart-item"><strong>${formatMoney(salaryIncome)}</strong><div class="report-chart-track"><div class="report-chart-bar salary" style="height:${graphHeight(salaryIncome)}%"></div></div><span>Salary</span></div>
+<div class="report-chart-item"><strong>${formatMoney(outsideIncome)}</strong><div class="report-chart-track"><div class="report-chart-bar other" style="height:${graphHeight(outsideIncome)}%"></div></div><span>Other</span></div>
+<div class="report-chart-item"><strong>${formatMoney(totalExpense)}</strong><div class="report-chart-track"><div class="report-chart-bar expense" style="height:${graphHeight(totalExpense)}%"></div></div><span>Expense</span></div>
+<div class="report-chart-item"><strong>${formatMoney(totalSaving)}</strong><div class="report-chart-track"><div class="report-chart-bar saving" style="height:${graphHeight(totalSaving)}%"></div></div><span>Saving</span></div>
+<div class="report-chart-item"><strong>${formatMoney(employeePF)}</strong><div class="report-chart-track"><div class="report-chart-bar pf" style="height:${graphHeight(employeePF)}%"></div></div><span>PF</span></div>
+</div>
+</div>
+</div>
+<div class="report-card report-slip-card">
+<div class="report-card-head"><div><h3>Slip & Statement List</h3><small>${slips.length} record${slips.length===1?"":"s"} • ${filterTitle}</small></div></div>
+<div class="report-slip-wrap">
+<table class="report-slip-table">
+<thead><tr><th>Date</th><th>Month</th><th>Type</th><th>Source</th><th>Amount</th><th>Action</th></tr></thead>
+<tbody>
+${slips.length?slips.map(item=>`
+<tr>
+<td>${formatDate(item.date)}</td>
+<td>${item.month?formatSalaryMonth(item.month):"-"}</td>
+<td><strong>${item.title}</strong></td>
+<td>${escapeHTML(item.source)}</td>
+<td class="amount-green">${formatMoney(item.amount)}</td>
+<td>
+<div class="report-slip-actions">
+${item.type==="salary"?`<button class="salary-slip-btn view" onclick="viewSalarySlip('${item.id}')"><i data-lucide="eye"></i> View</button><button class="salary-slip-btn download" onclick="downloadSalarySlip('${item.id}')"><i data-lucide="download"></i> PDF</button>`:`<button class="salary-slip-btn view" onclick="viewOtherIncomeStatement('${item.id}')"><i data-lucide="eye"></i> View</button><button class="salary-slip-btn download" onclick="downloadOtherIncomeStatement('${item.id}')"><i data-lucide="download"></i> PDF</button>`}
+</div>
+</td>
+</tr>`).join(""):`<tr><td colspan="6" class="report-empty">No salary slip or income statement found for this period.</td></tr>`}
+</tbody>
+</table>
+</div>
+</div>`;
+lucide.createIcons();
 }
-
-
+function changeReportFilterType(type){
+reportFilterType=type;
+renderReportsPage();
+}
+function getFilteredReportData(){
+const getDate=row=>row.salary_date||row.income_date||row.expense_date||row.saving_date||"";
+const matches=row=>{
+const date=getDate(row);
+if(!date)return false;
+if(reportFilterType==="month")return date.slice(0,7)===reportMonth;
+if(reportFilterType==="year")return date.slice(0,4)===reportYear;
+if(reportFilterType==="range")return(!reportStartDate||date>=reportStartDate)&&(!reportEndDate||date<=reportEndDate);
+return true;
+};
+return{
+salaryData:salaryRows.filter(matches),
+otherData:otherIncomeRows.filter(matches),
+expenseData:expenseRows.filter(matches),
+savingData:savingRows.filter(matches)
+};
+}
+function downloadFilteredReportCSV(){
+const{salaryData,otherData,expenseData,savingData}=getFilteredReportData();
+const rows=[["Date","Type","Source","Note","Amount"]];
+salaryData.forEach(row=>rows.push([row.salary_date,"Salary",row.company_name||"MUNITIONS INDIA LTD",row.note||"",Number(row.amount||0)]));
+otherData.forEach(row=>rows.push([row.income_date,"Other Income",row.source||"Other Income",row.note||"",Number(row.amount||0)]));
+expenseData.forEach(row=>rows.push([row.expense_date,"Expense",row.category||"Expense",row.note||"",Number(row.amount||0)]));
+savingData.forEach(row=>rows.push([row.saving_date,"Saving",row.source||"Saving",row.note||"",Number(row.amount||0)]));
+downloadCSVFile(rows,`My-Paisa-Report-${getReportFileLabel()}.csv`);
+}
+function downloadAllTransactionsCSV(){
+const rows=[["Date","Type","Source","Note","Amount"]];
+salaryRows.forEach(row=>rows.push([row.salary_date,"Salary",row.company_name||"MUNITIONS INDIA LTD",row.note||"",Number(row.amount||0)]));
+otherIncomeRows.forEach(row=>rows.push([row.income_date,"Other Income",row.source||"Other Income",row.note||"",Number(row.amount||0)]));
+expenseRows.forEach(row=>rows.push([row.expense_date,"Expense",row.category||"Expense",row.note||"",Number(row.amount||0)]));
+savingRows.forEach(row=>rows.push([row.saving_date,"Saving",row.source||"Saving",row.note||"",Number(row.amount||0)]));
+downloadCSVFile(rows,"My-Paisa-All-Transactions.csv");
+}
+function downloadCSVFile(rows,fileName){
+const csv=rows.map(row=>row.map(value=>`"${String(value??"").replace(/"/g,'""')}"`).join(",")).join("\n");
+const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"});
+const url=URL.createObjectURL(blob);
+const link=document.createElement("a");
+link.href=url;
+link.download=fileName;
+document.body.appendChild(link);
+link.click();
+link.remove();
+URL.revokeObjectURL(url);
+}
+function getReportFileLabel(){
+if(reportFilterType==="month")return reportMonth;
+if(reportFilterType==="year")return reportYear;
+return`${reportStartDate||"start"}-to-${reportEndDate||"end"}`;
+}
+function downloadFilteredReportPDF(){
+if(!window.jspdf||!window.jspdf.jsPDF){
+showToast("PDF library not loaded");
+return;
+}
+const{salaryData,otherData,expenseData,savingData}=getFilteredReportData();
+const salaryTotal=salaryData.reduce((sum,row)=>sum+Number(row.amount||0),0);
+const otherTotal=otherData.reduce((sum,row)=>sum+Number(row.amount||0),0);
+const expenseTotal=expenseData.reduce((sum,row)=>sum+Number(row.amount||0),0);
+const savingTotal=savingData.reduce((sum,row)=>sum+Number(row.amount||0),0);
+const employeePF=salaryData.reduce((sum,row)=>sum+(row.pf_enabled===false?0:Number(row.pf_deduction||0)),0);
+const employerPF=salaryData.reduce((sum,row)=>sum+(row.pf_enabled===false?0:Number(row.employer_pf||0)),0);
+const totalIncome=salaryTotal+otherTotal;
+const net=totalIncome-expenseTotal-savingTotal;
+const{jsPDF}=window.jspdf;
+const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+const money=value=>"Rs. "+Number(value||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+doc.setTextColor(25,47,76);
+doc.setFont("helvetica","bold");
+doc.setFontSize(18);
+doc.text("MY PAISA",15,18);
+doc.setFontSize(14);
+doc.text("Financial Report",15,27);
+doc.setFont("helvetica","normal");
+doc.setFontSize(9);
+doc.setTextColor(105,120,142);
+doc.text(`Period: ${getReportFileLabel()}`,15,34);
+doc.autoTable({
+startY:41,
+head:[["Summary","Amount"]],
+body:[
+["Salary Credited",money(salaryTotal)],
+["Other Income",money(otherTotal)],
+["Total Income",money(totalIncome)],
+["Expenses",money(expenseTotal)],
+["Savings",money(savingTotal)],
+["Employee PF",money(employeePF)],
+["Employer PF",money(employerPF)],
+["Net Cash Change",money(net)]
+],
+theme:"grid",
+headStyles:{fillColor:[78,120,255]},
+styles:{fontSize:9,cellPadding:3}
+});
+const entries=[];
+salaryData.forEach(row=>entries.push([formatDate(row.salary_date),"Salary",row.company_name||"MUNITIONS INDIA LTD",money(row.amount)]));
+otherData.forEach(row=>entries.push([formatDate(row.income_date),"Other Income",row.source||"Other Income",money(row.amount)]));
+expenseData.forEach(row=>entries.push([formatDate(row.expense_date),"Expense",row.category||"Expense","-"+money(row.amount)]));
+savingData.forEach(row=>entries.push([formatDate(row.saving_date),"Saving",row.source||"Saving","-"+money(row.amount)]));
+entries.sort((a,b)=>String(a[0]).localeCompare(String(b[0])));
+doc.autoTable({
+startY:doc.lastAutoTable.finalY+8,
+head:[["Date","Type","Source","Amount"]],
+body:entries.length?entries:[["-","No records","-","-"]],
+theme:"striped",
+headStyles:{fillColor:[32,50,77]},
+styles:{fontSize:8,cellPadding:2.5}
+});
+doc.save(`My-Paisa-Report-${getReportFileLabel()}.pdf`);
+showToast("Report PDF downloaded");
+}
 /* ========================================
    SAVING GOALS
 ======================================== */
@@ -6909,14 +8208,156 @@ function updateJoiningDuration() {
 
   }
 
+function getSalaryDivisor(){
+const selected=document.getElementById("salaryDivisor").value;
+if(selected==="custom")return Math.max(1,Number(document.getElementById("customSalaryDivisor").value||26));
+return Number(selected||26);
+}
+function updateSalaryDivisorState(){
+const custom=document.getElementById("salaryDivisor").value==="custom";
+document.getElementById("customSalaryDivisor").style.display=custom?"block":"none";
+calculateSalarySlip();
+}
+ /* ========================================
+   SALARY CALCULATION
+======================================== */
+function getSalaryRate(selectId,customId){
+const selected=document.getElementById(selectId).value;
+if(selected==="custom")return Number(document.getElementById(customId).value||0);
+return Number(selected||0);
+}
+function updateSalaryFieldStates(){
+const daCustom=document.getElementById("daRate").value==="custom";
+const hraCustom=document.getElementById("hraRate").value==="custom";
+const overtimeOn=document.getElementById("overtimeEligibility").value==="yes";
+const pfOn=document.getElementById("pfEnabled").value==="on";
+const esicOn=document.getElementById("esicApplicable").value==="yes";
+const otherOn=document.getElementById("otherDeductionType").value!=="none";
+const loanOn=document.getElementById("loanEligible").value==="yes";
+document.getElementById("daCustomRate").style.display=daCustom?"block":"none";
+document.getElementById("hraCustomRate").style.display=hraCustom?"block":"none";
+document.getElementById("overtimeSalary").style.display=overtimeOn?"block":"none";
+document.getElementById("esicDeduction").style.display=esicOn?"block":"none";
+document.getElementById("otherDeduction").style.display=otherOn?"block":"none";
+document.getElementById("loanDeduction").style.display=loanOn?"block":"none";
+document.getElementById("employeePFRate").disabled=!pfOn;
+document.getElementById("employerPFRate").disabled=!pfOn;
+calculateSalarySlip();
+}
+function calculateSalarySlip(){
+const monthlyBasic=Number(document.getElementById("monthlyBasicSalary")?.value||0);
+const divisor=getSalaryDivisor();
+const payableDays=Number(document.getElementById("workingDays")?.value||0);
+const basic=divisor>0?(monthlyBasic/divisor)*payableDays:0;
+const daRate=getSalaryRate("daRate","daCustomRate");
+const hraRate=getSalaryRate("hraRate","hraCustomRate");
+const da=basic*daRate/100;
+const hra=basic*hraRate/100;
+const other=Number(document.getElementById("otherAllowance")?.value||0);
+const overtimeEligible=document.getElementById("overtimeEligibility")?.value==="yes";
+const overtime=overtimeEligible?Number(document.getElementById("overtimeSalary")?.value||0):0;
+const pfEnabled=document.getElementById("pfEnabled")?.value==="on";
+const employeePFRate=Number(document.getElementById("employeePFRate")?.value||0);
+const employerPFRate=Number(document.getElementById("employerPFRate")?.value||0);
+const pfWage=basic+da;
+const employeePF=pfEnabled?pfWage*employeePFRate/100:0;
+const employerPF=pfEnabled?pfWage*employerPFRate/100:0;
+const esicApplicable=document.getElementById("esicApplicable")?.value==="yes";
+const esic=esicApplicable?Number(document.getElementById("esicDeduction")?.value||0):0;
+const otherType=document.getElementById("otherDeductionType")?.value||"none";
+const otherDeduction=otherType!=="none"?Number(document.getElementById("otherDeduction")?.value||0):0;
+const loanEligible=document.getElementById("loanEligible")?.value==="yes";
+const loanDeduction=loanEligible?Number(document.getElementById("loanDeduction")?.value||0):0;
+const gross=basic+da+hra+other+overtime+employerPF;
+const deduction=employeePF+employerPF+esic+otherDeduction+loanDeduction;
+const net=Math.max(0,gross-deduction);
+document.getElementById("basicSalary").value=basic.toFixed(2);
+document.getElementById("daSalary").value=da.toFixed(2);
+document.getElementById("hraSalary").value=hra.toFixed(2);
+document.getElementById("pfDeduction").value=employeePF.toFixed(2);
+document.getElementById("employerPF").value=employerPF.toFixed(2);
+document.getElementById("grossSalary").value=gross.toFixed(2);
+document.getElementById("totalDeduction").value=deduction.toFixed(2);
+document.getElementById("netSalaryDisplay").textContent=formatMoney(net);
+return{monthlyBasic,divisor,payableDays,basic,daRate,hraRate,da,hra,other,overtimeEligible,overtime,pfEnabled,employeePFRate,employerPFRate,pfWage,employeePF,employerPF,esicApplicable,esic,otherType,otherDeduction,loanEligible,loanDeduction,gross,deduction,net};
+}
+async function loadSalaryAttendanceFromMonth(){
+const monthValue=document.getElementById("salaryMonth").value;
+if(!monthValue||!currentUser)return;
+const[year,month]=monthValue.split("-").map(Number);
+const lastDay=new Date(year,month,0).getDate();
+const start=`${monthValue}-01`;
+const end=`${monthValue}-${String(lastDay).padStart(2,"0")}`;
+const{data,error}=await db.from("attendance").select("attendance_date,status").eq("user_id",currentUser.id).gte("attendance_date",start).lte("attendance_date",end);
+if(error){
+console.error(error);
+showToast("Attendance load failed: "+error.message);
+return;
+}
+const rows=(data||[]).filter(row=>{
+const day=new Date(row.attendance_date+"T00:00:00").getDay();
+return day!==0&&["present","absent","leave"].includes(row.status);
+});
+document.getElementById("workingDays").value=rows.length;
+document.getElementById("presentDays").value=rows.filter(row=>row.status==="present").length;
+document.getElementById("absentDays").value=rows.filter(row=>row.status==="absent").length;
+document.getElementById("leaveDays").value=rows.filter(row=>row.status==="leave").length;
+calculateSalarySlip();
+}
+document.querySelectorAll(".salary-calc").forEach(input=>{
+input.addEventListener("input",calculateSalarySlip);
+input.addEventListener("change",updateSalaryFieldStates);
+});
+document.getElementById("salaryDivisor").addEventListener("change",updateSalaryDivisorState);
+document.getElementById("customSalaryDivisor").addEventListener("input",calculateSalarySlip);
+document.getElementById("salaryMonth").addEventListener("change",loadSalaryAttendanceFromMonth);
+document.getElementById("incomeSourceMode").addEventListener("change",changeIncomeSourceMode);
+function changeIncomeSourceMode(){
+const mode=document.getElementById("incomeSourceMode").value;
+const salaryFields=document.getElementById("salaryFields");
+const normalFields=document.getElementById("normalTransactionFields");
+const monthWrap=document.getElementById("otherIncomeMonthWrap");
+const amount=document.getElementById("amount");
+const category=document.getElementById("category");
+const categoryLabel=document.getElementById("categoryLabel");
+const modal=document.querySelector("#transactionModal .modal");
+const now=new Date();
 
-  /* ========================================
-     TRANSACTION MODAL
-  ======================================== */
-
-  function openTransactionModal(
-    type
-  ) {
+if(mode==="factory"){
+salaryFields.style.display="block";
+normalFields.style.display="none";
+monthWrap.style.display="none";
+amount.required=false;
+category.required=false;
+modal.classList.add("salary-modal-card");
+document.getElementById("modalTitle").textContent="Add Salary";
+document.getElementById("transactionSubmitBtn").textContent="Save Salary";
+document.getElementById("transactionDateLabel").textContent="Pay Date";
+loadSalaryAttendanceFromMonth();
+}else{
+salaryFields.style.display="none";
+normalFields.style.display="block";
+monthWrap.style.display="block";
+amount.required=true;
+category.style.display="block";
+category.required=true;
+categoryLabel.textContent="Income Source / Title";
+category.placeholder="Example: Freelance, Bonus, Side Work";
+document.getElementById("otherIncomeMonth").value=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+document.getElementById("expenseCategoryWrap").style.display="none";
+document.getElementById("savingFundingWrap").style.display="none";
+modal.classList.remove("salary-modal-card");
+document.getElementById("modalTitle").textContent="Add Other Income";
+document.getElementById("transactionSubmitBtn").textContent="Save Income";
+document.getElementById("transactionDateLabel").textContent="Received Date";
+}
+}
+/* ========================================
+   TRANSACTION MODAL
+======================================== */
+function openTransactionModal(
+type
+) {
 
     if (!currentUser) {
 
@@ -6958,35 +8399,86 @@ function updateJoiningDuration() {
       "Add Transaction";
 
 
-   const categoryInput = document.getElementById("category");
-const expenseCategory = document.getElementById("expenseCategory");
-const otherExpenseCategory = document.getElementById("otherExpenseCategory");
-const categoryLabel = document.getElementById("categoryLabel");
-const expenseCategoryWrap = document.getElementById("expenseCategoryWrap");
-const expenseCategoryText = document.getElementById("expenseCategoryText");
-const savingFundingWrap = document.getElementById("savingFundingWrap");
-const savingFundingType = document.getElementById("savingFundingType");
-
-categoryInput.value = "";
-expenseCategory.value = "";
-expenseCategoryText.textContent = "Select expense category";
-
+  const categoryInput=document.getElementById("category");
+const expenseCategory=document.getElementById("expenseCategory");
+const otherExpenseCategory=document.getElementById("otherExpenseCategory");
+const categoryLabel=document.getElementById("categoryLabel");
+const expenseCategoryWrap=document.getElementById("expenseCategoryWrap");
+const expenseCategoryText=document.getElementById("expenseCategoryText");
+const expenseFundingWrap=document.getElementById("expenseFundingWrap");
+const expenseFundingSource=document.getElementById("expenseFundingSource");
+const savingFundingWrap=document.getElementById("savingFundingWrap");
+const savingFundingType=document.getElementById("savingFundingType");
+const salaryFields=document.getElementById("salaryFields");
+const normalTransactionFields=document.getElementById("normalTransactionFields");
+const amountInput=document.getElementById("amount");
+const incomeSourceWrap=document.getElementById("incomeSourceWrap");
+const incomeSourceMode=document.getElementById("incomeSourceMode");
+const otherIncomeMonthWrap=document.getElementById("otherIncomeMonthWrap");
+const otherIncomeMonth=document.getElementById("otherIncomeMonth");
+categoryInput.value="";
+expenseCategory.value="";
+expenseCategoryText.textContent="Select expense category";
 expenseCategoryWrap.classList.remove("open");
-expenseCategoryWrap.style.display = "none";
-
-otherExpenseCategory.value = "";
-otherExpenseCategory.style.display = "none";
-otherExpenseCategory.required = false;
-
-savingFundingWrap.style.display = "none";
-savingFundingType.value = "balance";
-
-if (type === "expense") {
-  categoryLabel.textContent = "Expense Category";
-  categoryInput.style.display = "none";
-  categoryInput.required = false;
-  expenseCategoryWrap.style.display = "block";
-} else {
+expenseCategoryWrap.style.display="none";
+otherExpenseCategory.value="";
+otherExpenseCategory.style.display="none";
+otherExpenseCategory.required=false;
+expenseFundingWrap.style.display="none";
+expenseFundingSource.value="salary";
+savingFundingWrap.style.display="none";
+savingFundingType.value="salary";
+incomeSourceWrap.style.display=type==="salary"?"block":"none";
+incomeSourceMode.value="factory";
+otherIncomeMonthWrap.style.display="none";
+salaryFields.style.display=type==="salary"?"block":"none";
+normalTransactionFields.style.display=type==="salary"?"none":"block";
+amountInput.required=type!=="salary";
+categoryInput.required=type!=="salary"&&type!=="expense";
+if(type==="salary"){
+editingSalaryId=null;
+document.querySelector("#transactionModal .modal").classList.add("salary-modal-card");
+document.getElementById("modalTitle").textContent="Add Salary";
+document.getElementById("transactionSubmitBtn").textContent="Save Salary";
+document.getElementById("transactionDateLabel").textContent="Pay Date";
+const now=new Date();
+document.getElementById("salaryMonth").value=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+document.getElementById("salaryEmployeeName").value="Ajay Kewat";
+document.getElementById("salaryEmployeeId").value="10731";
+document.getElementById("salaryDesignation").value="TB-DBW";
+document.getElementById("salaryCompany").value="MUNITIONS INDIA LTD";
+document.getElementById("monthlyBasicSalary").value="19900";
+document.getElementById("salaryDivisor").value="26";
+document.getElementById("customSalaryDivisor").value="26";
+document.getElementById("basicSalary").value="0";
+document.getElementById("daRate").value="60";
+document.getElementById("hraRate").value="20";
+document.getElementById("otherAllowance").value="0";
+document.getElementById("overtimeEligibility").value="no";
+document.getElementById("overtimeSalary").value="0";
+document.getElementById("pfEnabled").value="on";
+document.getElementById("employeePFRate").value="12";
+document.getElementById("employerPFRate").value="12";
+document.getElementById("pfInterestRate").value="8";
+document.getElementById("esicApplicable").value="no";
+document.getElementById("esicDeduction").value="0";
+document.getElementById("otherDeductionType").value="none";
+document.getElementById("otherDeduction").value="0";
+document.getElementById("loanEligible").value="no";
+document.getElementById("loanDeduction").value="0";
+updateSalaryFieldStates();
+changeIncomeSourceMode();
+}else if(type==="expense"){
+document.querySelector("#transactionModal .modal").classList.remove("salary-modal-card");
+document.getElementById("transactionDateLabel").textContent="Date";
+document.getElementById("transactionSubmitBtn").textContent="Save Transaction";
+categoryLabel.textContent="Expense Category";
+categoryInput.style.display="none";
+categoryInput.required=false;
+expenseCategoryWrap.style.display="block";
+expenseFundingWrap.style.display="block";
+expenseFundingSource.value="salary";
+}else{
   categoryInput.style.display = "block";
   categoryInput.required = true;
   expenseCategoryWrap.style.display = "none";
@@ -7256,66 +8748,36 @@ document.addEventListener("click", function(event) {
       );
 
   }
-function renderSalaryPage() {
-  const section = document.getElementById("sectionView");
-  const total = salaryRows.reduce((sum, row) => sum + Number(row.amount), 0);
-
-  section.innerHTML = `
-    <div class="page-head">
-      <div>
-        <h2>Salary</h2>
-        <p>Your salary and income history.</p>
-      </div>
-      <button class="page-action" onclick="openTransactionModal('salary')">
-        <i data-lucide="plus"></i> Add Salary
-      </button>
-    </div>
-
-    <div class="section-stats">
-      <div class="section-stat">
-        <small>This Month</small>
-        <strong>${formatMoney(salary)}</strong>
-      </div>
-      <div class="section-stat">
-        <small>All-Time Income</small>
-        <strong>${formatMoney(total)}</strong>
-      </div>
-      <div class="section-stat">
-        <small>Total Entries</small>
-        <strong>${salaryRows.length}</strong>
-      </div>
-    </div>
-
-    <div class="data-card">
-      <div class="data-card-header">
-        <h3>Salary History</h3>
-      </div>
-      <div class="data-table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Source</th>
-              <th>Note</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${salaryRows.map(row => `
-              <tr>
-                <td>${formatDate(row.salary_date)}</td>
-                <td><strong>${escapeHTML(row.source)}</strong></td>
-                <td>${escapeHTML(row.note || "-")}</td>
-                <td class="amount-green">${formatMoney(row.amount)}</td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-
-  lucide.createIcons();
+function renderSalaryPage(){
+const section=document.getElementById("sectionView");
+const total=salaryRows.reduce((sum,row)=>sum+Number(row.amount),0);
+section.innerHTML=`
+<div class="page-head">
+<div>
+<h2>Salary</h2>
+<p>Your salary and income history.</p>
+</div>
+<button class="page-action" onclick="openTransactionModal('salary')">
+<i data-lucide="plus"></i> Add Salary
+</button>
+</div>
+<div class="section-stats">
+<div class="section-stat">
+<small>This Month</small>
+<strong>${formatMoney(salary)}</strong>
+</div>
+<div class="section-stat">
+<small>All-Time Income</small>
+<strong>${formatMoney(total)}</strong>
+</div>
+<div class="section-stat">
+<small>Total Entries</small>
+<strong>${salaryRows.length}</strong>
+</div>
+</div>
+${renderSalaryTable()}
+`;
+lucide.createIcons();
 }
 window.openTransactionModal=openTransactionModal;
 window.closeModal=closeModal;
@@ -7332,6 +8794,10 @@ window.filterAllTransactions=filterAllTransactions;
 window.renderAllTransactionsPage=renderAllTransactionsPage;
 window.setAllTransactionFilter=setAllTransactionFilter;
 window.deleteAllTransaction=deleteAllTransaction;
+window.editSalary=editSalary;
+window.viewSalarySlip=viewSalarySlip;
+window.downloadSalarySlip=downloadSalarySlip;
+window.closeSalarySlip=closeSalarySlip;
 
 if("serviceWorker" in navigator){
   window.addEventListener("load",async()=>{
