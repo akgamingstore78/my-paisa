@@ -77,11 +77,11 @@ svg{display:block}
 .panel-head h3{font-size:15px}
 .filters{display:flex;flex-wrap:wrap;gap:8px}
 .filter{height:38px;padding:0 11px;border:1px solid #dfe8f3;border-radius:11px;background:#f8fbff;color:#40516b;font-size:10px;outline:none}
-.table-wrap{width:100%;overflow:auto;border:1px solid rgba(75,98,136,.08);border-radius:15px;scrollbar-width:none}
+.table-wrap{width:100%;overflow:auto;border:1px solid rgba(75,98,136,.08);border-radius:15px;scrollbar-width:thin;scrollbar-color:rgba(78,120,255,.45) transparent}
 .data-table{width:100%;border-collapse:collapse;min-width:760px}
-.data-table th{padding:12px 13px;text-align:left;background:#f7faff;color:#8190a5;font-size:9px;text-transform:uppercase;letter-spacing:.5px}
-.data-table td{padding:13px;border-top:1px solid rgba(75,98,136,.08);color:#40516b;font-size:11px}
-.data-table td strong{color:#263852}
+.data-table th{padding:14px 16px;text-align:left;background:#f5f8fd;color:#60718d;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.35px;white-space:nowrap}
+.data-table td{padding:15px 16px;border-top:1px solid rgba(75,98,136,.09);color:#253956;font-size:13.5px;font-weight:500;line-height:1.45;white-space:nowrap}
+.data-table td strong{color:#172b49;font-size:13.5px;font-weight:700}
 .amount-green{color:#1cad74!important;font-weight:800}
 .amount-red{color:#ef5369!important;font-weight:800}
 .amount-purple{color:#785af0!important;font-weight:800}
@@ -119,7 +119,7 @@ svg{display:block}
 .auth-error.show{display:block}
 .modal-overlay{position:fixed;inset:0;z-index:999;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(47,67,96,.24);backdrop-filter:blur(10px)}
 .modal-overlay.show{display:flex}
-.modal{width:min(100%,520px);max-height:calc(100vh - 36px);overflow-y:auto;padding:24px;border-radius:24px;background:rgba(255,255,255,.98);border:1px solid rgba(72,96,136,.10);box-shadow:var(--shadow-lg)}
+.modal{width:min(100%,760px);max-height:calc(100vh - 36px);overflow-y:auto;padding:26px;border-radius:24px;background:rgba(255,255,255,.98);border:1px solid rgba(72,96,136,.10);box-shadow:var(--shadow-lg)}
 .modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
 .close-btn{width:36px;height:36px;border:0;border-radius:11px;background:#f2f6fb;color:#64738a;display:grid;place-items:center}
 .form-group{margin-bottom:13px}
@@ -211,20 +211,29 @@ textarea.form-control{padding:12px;min-height:90px;resize:vertical}
 <span class="nav-icon c-green"><i data-lucide="indian-rupee"></i></span>
 <span>Salary</span>
 </a>
-
+<a class="nav-item" href="#other-income" data-section="other-income">
+<span class="nav-icon c-cyan"><i data-lucide="circle-dollar-sign"></i></span>
+<span>Other Income</span>
+</a>
 <a class="nav-item" href="#expenses" data-section="expenses">
 <span class="nav-icon c-red"><i data-lucide="credit-card"></i></span>
 <span>Expenses</span>
 </a>
-
 <a class="nav-item" href="#savings" data-section="savings">
 <span class="nav-icon c-purple"><i data-lucide="piggy-bank"></i></span>
 <span>Savings</span>
 </a>
-
 <a class="nav-item" href="#attendance" data-section="attendance">
 <span class="nav-icon c-green"><i data-lucide="calendar-days"></i></span>
 <span>Attendance</span>
+</a>
+<a class="nav-item" href="#transactions" data-section="transactions">
+<span class="nav-icon c-blue"><i data-lucide="list"></i></span>
+<span>All Transactions</span>
+</a>
+<a class="nav-item" href="#pf" data-section="pf">
+<span class="nav-icon c-cyan"><i data-lucide="landmark"></i></span>
+<span>PF Manage</span>
 </a>
 
 <div class="nav-label">Insights</div>
@@ -335,6 +344,7 @@ SUPABASE_PUBLISHABLE_KEY
 
 let currentUser=null;
 let salaryRows=[];
+let otherIncomeRows=[];
 let expenseRows=[];
 let savingRows=[];
 let attendanceRows=[];
@@ -612,6 +622,7 @@ showToast(
 
 const[
 salaryResult,
+otherIncomeResult,
 expenseResult,
 savingResult,
 attendanceResult,
@@ -634,6 +645,12 @@ currentUser.id
 ascending:false
 }
 ),
+
+db
+.from("other_income")
+.select("*")
+.eq("user_id",currentUser.id)
+.order("income_date",{ascending:false}),
 
 db
 .from(
@@ -698,6 +715,7 @@ currentUser.id
 
 const error=
 salaryResult.error ||
+otherIncomeResult.error ||
 expenseResult.error ||
 savingResult.error ||
 attendanceResult.error ||
@@ -716,11 +734,9 @@ return;
 
 }
 
-salaryRows=
-salaryResult.data || [];
-
-expenseRows=
-expenseResult.data || [];
+salaryRows=salaryResult.data||[];
+otherIncomeRows=otherIncomeResult.data||[];
+expenseRows=expenseResult.data||[];
 
 savingRows=
 savingResult.data || [];
@@ -858,30 +874,14 @@ activeSection==="dashboard"
 )
 renderDashboard();
 
-if(
-activeSection==="salary"
-)
-renderSalary();
-
-if(
-activeSection==="expenses"
-)
-renderExpenses();
-
-if(
-activeSection==="savings"
-)
-renderSavings();
-
-if(
-activeSection==="attendance"
-)
-renderAttendance();
-
-if(
-activeSection==="reports"
-)
-renderReports();
+if(activeSection==="salary")renderSalary();
+if(activeSection==="other-income")renderOtherIncomeAdmin();
+if(activeSection==="expenses")renderExpenses();
+if(activeSection==="savings")renderSavings();
+if(activeSection==="attendance")renderAttendance();
+if(activeSection==="transactions")renderAdminTransactions();
+if(activeSection==="pf")renderAdminPF();
+if(activeSection==="reports")renderReports();
 
 lucide.createIcons();
 
@@ -1565,47 +1565,59 @@ type
 }
 
 function renderSalaryTable(){
-
-const rows=
-filtered(
-"salary",
-salaryRows,
-"salary_date",
-"source"
-);
-
-return tableWrap(
-rows,
-"salary",
-row=>`
-
-<td>
-${dateFmt(row.salary_date)}
-</td>
-
-<td>
-<strong>
-${esc(row.source)}
-</strong>
-</td>
-
-<td>
-${esc(row.note || "-")}
-</td>
-
-<td class="amount-green">
-${money(row.amount)}
-</td>
-
+const rows=filtered("salary",salaryRows,"salary_date","source");
+return tableWrap(rows,"salary",row=>`
+<td>${dateFmt(row.salary_date)}</td>
+<td>${esc(row.salary_month||"-")}</td>
+<td>${esc(row.employee_name||"-")}</td>
+<td>${esc(row.employee_id||"-")}</td>
+<td>${esc(row.designation||"-")}</td>
+<td>${esc(row.company_name||"-")}</td>
+<td>${money(row.basic_salary||0)}</td>
+<td>${money(row.da||0)}</td>
+<td>${money(row.hra||0)}</td>
+<td>${money(row.other_allowance||0)}</td>
+<td>${row.overtime_eligible?money(row.overtime||0):"Not Eligible"}</td>
+<td>${money(row.gross_salary||0)}</td>
+<td>${row.pf_enabled===false?"PF OFF":money(row.pf_deduction||0)}</td>
+<td>${row.pf_enabled===false?"PF OFF":money(row.employer_pf||0)}</td>
+<td>${row.esic_applicable?money(row.esic_deduction||0):"N/A"}</td>
+<td>${row.other_deduction_type==="none"?"None":money(row.other_deduction||0)}</td>
+<td>${row.loan_eligible?money(row.loan_deduction||0):"Not Eligible"}</td>
+<td>${money(row.total_deduction||0)}</td>
+<td>${Number(row.working_days||0)}</td>
+<td>${Number(row.present_days||0)}</td>
+<td>${Number(row.absent_days||0)}</td>
+<td>${Number(row.leave_days||0)}</td>
+<td class="amount-green">${money(row.amount||0)}</td>
+<td>${esc(row.note||"-")}</td>
 `,
 `
-<th>Date</th>
-<th>Source</th>
+<th>Pay Date</th>
+<th>Salary Month</th>
+<th>Employee</th>
+<th>Employee ID</th>
+<th>Designation</th>
+<th>Company</th>
+<th>Basic</th>
+<th>DA</th>
+<th>HRA</th>
+<th>Other Allowance</th>
+<th>Overtime</th>
+<th>Gross</th>
+<th>Employee PF</th>
+<th>Employer PF</th>
+<th>ESIC</th>
+<th>Other Deduction</th>
+<th>Loan</th>
+<th>Total Deduction</th>
+<th>Working Days</th>
+<th>Present</th>
+<th>Absent</th>
+<th>Leave</th>
+<th>Net Salary</th>
 <th>Note</th>
-<th>Amount</th>
-`
-);
-
+`);
 }
 
 function renderExpenseTable(){
@@ -1627,24 +1639,16 @@ row=>`
 ${dateFmt(row.expense_date)}
 </td>
 
-<td>
-<strong>
-${esc(row.category)}
-</strong>
-</td>
-
-<td>
-${esc(row.note || "-")}
-</td>
-
-<td class="amount-red">
-${money(row.amount)}
-</td>
+<td><strong>${esc(row.category)}</strong></td>
+<td><strong>${row.funding_source==="other_income"?"Other Income":"MUNITIONS Salary"}</strong></td>
+<td>${esc(row.note||"-")}</td>
+<td class="amount-red">${money(row.amount)}</td>
 
 `,
 `
 <th>Date</th>
 <th>Category</th>
+<th>Paid From</th>
 <th>Note</th>
 <th>Amount</th>
 `
@@ -1678,33 +1682,10 @@ ${esc(row.source)}
 </td>
 
 <td>
-
-<span class="badge ${
-(
-row.funding_type ||
-"balance"
-)==="external"
-?
-"b-orange"
-:
-"b-blue"
-}">
-
-${
-(
-row.funding_type ||
-"balance"
-)==="external"
-?
-"Outside Money"
-:
-"Available Balance"
-}
-
+<span class="badge ${row.funding_source==="other_income"?"b-green":row.funding_source==="external"?"b-orange":"b-blue"}">
+${row.funding_source==="other_income"?"Other Income":row.funding_source==="external"?"Outside Money":"MUNITIONS Salary"}
 </span>
-
 </td>
-
 <td>
 ${esc(row.note || "-")}
 </td>
@@ -1872,6 +1853,107 @@ onclick="deleteRow('${type}','${row.id}')"
 
 `;
 
+}
+
+function renderOtherIncomeAdmin(){
+const total=otherIncomeRows.reduce((s,r)=>s+Number(r.amount||0),0);
+const spent=expenseRows.filter(r=>r.funding_source==="other_income").reduce((s,r)=>s+Number(r.amount||0),0);
+const saved=savingRows.filter(r=>r.funding_source==="other_income").reduce((s,r)=>s+Number(r.amount||0),0);
+const available=Math.max(0,total-spent-saved);
+document.getElementById("content").innerHTML=`
+<div class="page-head"><div><h2>Other Income</h2><p>Manage income received outside Munitions India salary.</p></div></div>
+<div class="stats-grid">
+<div class="stat-card s1"><small>Total Other Income</small><strong>${money(total)}</strong></div>
+<div class="stat-card s2"><small>Expenses From Other</small><strong>${money(spent)}</strong></div>
+<div class="stat-card s3"><small>Savings From Other</small><strong>${money(saved)}</strong></div>
+<div class="stat-card s4"><small>Available</small><strong>${money(available)}</strong></div>
+</div>
+<div class="panel"><div class="panel-head"><h3>Other Income History</h3></div>
+<div class="table-wrap"><table class="data-table">
+<thead><tr><th>Date</th><th>Month</th><th>Source</th><th>Note</th><th>Amount</th><th>Action</th></tr></thead>
+<tbody>${otherIncomeRows.length?otherIncomeRows.map(row=>`
+<tr>
+<td>${dateFmt(row.income_date)}</td>
+<td>${esc(row.income_month||"-")}</td>
+<td><strong>${esc(row.source||"Other Income")}</strong></td>
+<td>${esc(row.note||"-")}</td>
+<td class="amount-green">${money(row.amount)}</td>
+<td><div class="row-actions"><button class="row-btn delete-btn" onclick="deleteRow('other_income','${row.id}')"><i data-lucide="trash-2"></i></button></div></td>
+</tr>`).join(""):`<tr><td colspan="6"><div class="empty"><strong>No Other Income</strong></div></td></tr>`}</tbody>
+</table></div></div>`;
+lucide.createIcons();
+}
+
+function renderAdminPF(){
+const rows=salaryRows.filter(row=>row.pf_enabled!==false&&(Number(row.pf_deduction||0)>0||Number(row.employer_pf||0)>0));
+const employee=rows.reduce((s,r)=>s+Number(r.pf_deduction||0),0);
+const employer=rows.reduce((s,r)=>s+Number(r.employer_pf||0),0);
+const balance=employee+employer;
+document.getElementById("content").innerHTML=`
+<div class="page-head"><div><h2>PF Manage</h2><p>PF contribution records linked directly to salary entries.</p></div></div>
+<div class="stats-grid">
+<div class="stat-card s4"><small>PF Balance</small><strong>${money(balance)}</strong></div>
+<div class="stat-card s1"><small>Employee PF</small><strong>${money(employee)}</strong></div>
+<div class="stat-card s3"><small>Employer PF</small><strong>${money(employer)}</strong></div>
+<div class="stat-card s2"><small>PF Records</small><strong>${rows.length}</strong></div>
+</div>
+<div class="panel"><div class="panel-head"><h3>PF History</h3></div>
+<div class="table-wrap"><table class="data-table">
+<thead><tr><th>Month</th><th>Pay Date</th><th>Basic</th><th>Employee PF</th><th>Employer PF</th><th>Total Addition</th><th>Interest Rate</th></tr></thead>
+<tbody>${rows.length?rows.map(row=>`
+<tr>
+<td><strong>${esc(row.salary_month||"-")}</strong></td>
+<td>${dateFmt(row.salary_date)}</td>
+<td>${money(row.basic_salary||0)}</td>
+<td class="amount-green">${money(row.pf_deduction||0)}</td>
+<td class="amount-purple">${money(row.employer_pf||0)}</td>
+<td><strong>${money(Number(row.pf_deduction||0)+Number(row.employer_pf||0))}</strong></td>
+<td>${Number(row.pf_interest_rate||0)}%</td>
+</tr>`).join(""):`<tr><td colspan="7"><div class="empty"><strong>No PF records</strong></div></td></tr>`}</tbody>
+</table></div></div>`;
+lucide.createIcons();
+}
+
+function renderAdminTransactions(){
+const rows=[
+...salaryRows.map(r=>({type:"Salary",date:r.salary_date,title:r.source||"Monthly Salary",source:"MUNITIONS Salary",note:r.note||"-",amount:Number(r.amount||0),id:r.id,dbType:"salary"})),
+...otherIncomeRows.map(r=>({type:"Other Income",date:r.income_date,title:r.source||"Other Income",source:"Other Income",note:r.note||"-",amount:Number(r.amount||0),id:r.id,dbType:"other_income"})),
+...expenseRows.map(r=>({type:"Expense",date:r.expense_date,title:r.category||"Expense",source:r.funding_source==="other_income"?"Other Income":"MUNITIONS Salary",note:r.note||"-",amount:-Number(r.amount||0),id:r.id,dbType:"expense"})),
+...savingRows.map(r=>({type:"Saving",date:r.saving_date,title:r.source||"Saving",source:r.funding_source==="other_income"?"Other Income":r.funding_source==="external"?"Outside Money":"MUNITIONS Salary",note:r.note||"-",amount:Number(r.amount||0),id:r.id,dbType:"saving"}))
+].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+document.getElementById("content").innerHTML=`
+<div class="page-head"><div><h2>All Transactions</h2><p>Salary, other income, expenses and savings in one ledger.</p></div></div>
+<div class="panel">
+<div class="panel-head"><h3>Full Transaction Ledger</h3><div class="filters"><input class="filter" id="adminTransactionSearch" placeholder="Search..." oninput="filterAdminTransactions()"></div></div>
+<div class="table-wrap"><table class="data-table">
+<thead><tr><th>Date</th><th>Type</th><th>Transaction</th><th>Source</th><th>Note</th><th>Amount</th><th>Action</th></tr></thead>
+<tbody id="adminTransactionsBody">
+${renderAdminTransactionRows(rows)}
+</tbody>
+</table></div></div>`;
+window.adminTransactionRows=rows;
+lucide.createIcons();
+}
+
+function renderAdminTransactionRows(rows){
+if(!rows.length)return`<tr><td colspan="7"><div class="empty"><strong>No transactions found</strong></div></td></tr>`;
+return rows.map(row=>`
+<tr>
+<td>${dateFmt(row.date)}</td>
+<td><strong>${esc(row.type)}</strong></td>
+<td>${esc(row.title)}</td>
+<td>${esc(row.source)}</td>
+<td>${esc(row.note)}</td>
+<td class="${row.amount<0?"amount-red":"amount-green"}">${row.amount<0?"-":""}${money(Math.abs(row.amount))}</td>
+<td><button class="row-btn delete-btn" onclick="deleteRow('${row.dbType}','${row.id}')"><i data-lucide="trash-2"></i></button></td>
+</tr>`).join("");
+}
+
+function filterAdminTransactions(){
+const q=(document.getElementById("adminTransactionSearch")?.value||"").toLowerCase().trim();
+const rows=(window.adminTransactionRows||[]).filter(row=>Object.values(row).join(" ").toLowerCase().includes(q));
+document.getElementById("adminTransactionsBody").innerHTML=renderAdminTransactionRows(rows);
+lucide.createIcons();
 }
 
 function renderReports(){
@@ -2085,19 +2167,195 @@ cap(type);
 
 let html="";
 
-if(
-type==="salary"
-){
-
-html=
-moneyFields(
-row.amount,
-row.source,
-row.salary_date,
-row.note,
-"Source"
-);
-
+if(type==="salary"){
+html=`
+<div class="form-group">
+<label>Employee Name</label>
+<input class="form-control" id="editEmployeeName" value="${esc(row.employee_name||"")}">
+</div>
+<div class="form-grid">
+<div class="form-group">
+<label>Employee ID</label>
+<input class="form-control" id="editEmployeeId" value="${esc(row.employee_id||"")}">
+</div>
+<div class="form-group">
+<label>Designation</label>
+<input class="form-control" id="editDesignation" value="${esc(row.designation||"")}">
+</div>
+</div>
+<div class="form-group">
+<label>Company / Factory Name</label>
+<input class="form-control" id="editCompanyName" value="${esc(row.company_name||"")}">
+</div>
+<div class="form-grid">
+<div class="form-group">
+<label>Pay Date</label>
+<input class="form-control" id="editDate" type="date" value="${row.salary_date||""}">
+</div>
+<div class="form-group">
+<label>Salary Month</label>
+<input class="form-control" id="editSalaryMonth" type="month" value="${row.salary_month||""}">
+</div>
+</div>
+<div class="form-grid">
+<div class="form-group">
+<label>Monthly Basic Salary</label>
+<input class="form-control" id="editMonthlyBasic" type="number" step=".01" value="${Number(row.monthly_basic_salary||0)}">
+</div>
+<div class="form-group">
+<label>Salary Divisor</label>
+<input class="form-control" id="editSalaryDivisor" type="number" step="1" value="${Number(row.salary_divisor||26)}">
+</div>
+</div>
+<div class="form-group">
+<label>Payable Basic</label>
+<input class="form-control" id="editBasicSalary" type="number" step=".01" value="${Number(row.basic_salary||0)}">
+</div>
+<div class="form-grid">
+<div class="form-group">
+<label>DA Rate %</label>
+<input class="form-control" id="editDaRate" type="number" step=".01" value="${Number(row.da_rate||0)}">
+</div>
+<div class="form-group">
+<label>DA Amount</label>
+<input class="form-control" id="editDa" type="number" step=".01" value="${Number(row.da||0)}">
+</div>
+</div>
+<div class="form-grid">
+<div class="form-group">
+<label>HRA Rate %</label>
+<input class="form-control" id="editHraRate" type="number" step=".01" value="${Number(row.hra_rate||0)}">
+</div>
+<div class="form-group">
+<label>HRA Amount</label>
+<input class="form-control" id="editHra" type="number" step=".01" value="${Number(row.hra||0)}">
+</div>
+</div>
+<div class="form-group">
+<label>Other Allowance</label>
+<input class="form-control" id="editOtherAllowance" type="number" step=".01" value="${Number(row.other_allowance||0)}">
+</div>
+<div class="form-grid">
+<div class="form-group">
+<label>Overtime</label>
+<select class="form-control" id="editOvertimeEligible">
+<option value="yes" ${row.overtime_eligible?"selected":""}>Eligible</option>
+<option value="no" ${!row.overtime_eligible?"selected":""}>Not Eligible</option>
+</select>
+</div>
+<div class="form-group">
+<label>Overtime Amount</label>
+<input class="form-control" id="editOvertime" type="number" step=".01" value="${Number(row.overtime||0)}">
+</div>
+</div>
+<div class="form-group">
+<label>Gross Earnings</label>
+<input class="form-control" id="editGrossSalary" type="number" step=".01" value="${Number(row.gross_salary||0)}">
+</div>
+<div class="form-grid">
+<div class="form-group">
+<label>PF</label>
+<select class="form-control" id="editPfEnabled">
+<option value="on" ${row.pf_enabled===false?"":"selected"}>PF ON</option>
+<option value="off" ${row.pf_enabled===false?"selected":""}>PF OFF</option>
+</select>
+</div>
+<div class="form-group">
+<label>PF Interest Rate %</label>
+<input class="form-control" id="editPfInterestRate" type="number" step=".01" value="${Number(row.pf_interest_rate??8)}">
+</div>
+</div>
+<div class="form-grid">
+<div class="form-group">
+<label>Employee PF Rate %</label>
+<input class="form-control" id="editEmployeePfRate" type="number" step=".01" value="${Number(row.employee_pf_rate??12)}">
+</div>
+<div class="form-group">
+<label>Employee PF</label>
+<input class="form-control" id="editEmployeePf" type="number" step=".01" value="${Number(row.pf_deduction||0)}">
+</div>
+</div>
+<div class="form-grid">
+<div class="form-group">
+<label>Employer PF Rate %</label>
+<input class="form-control" id="editEmployerPfRate" type="number" step=".01" value="${Number(row.employer_pf_rate??12)}">
+</div>
+<div class="form-group">
+<label>Employer PF</label>
+<input class="form-control" id="editEmployerPf" type="number" step=".01" value="${Number(row.employer_pf||0)}">
+</div>
+</div>
+<div class="form-grid">
+<div class="form-group">
+<label>ESIC</label>
+<select class="form-control" id="editEsicApplicable">
+<option value="yes" ${row.esic_applicable?"selected":""}>Applicable</option>
+<option value="no" ${!row.esic_applicable?"selected":""}>Not Applicable</option>
+</select>
+</div>
+<div class="form-group">
+<label>ESIC Deduction</label>
+<input class="form-control" id="editEsicDeduction" type="number" step=".01" value="${Number(row.esic_deduction||0)}">
+</div>
+</div>
+<div class="form-grid">
+<div class="form-group">
+<label>Other Deduction</label>
+<select class="form-control" id="editOtherDeductionType">
+<option value="none" ${row.other_deduction_type==="none"?"selected":""}>None</option>
+<option value="other" ${row.other_deduction_type!=="none"?"selected":""}>Applicable</option>
+</select>
+</div>
+<div class="form-group">
+<label>Other Deduction Amount</label>
+<input class="form-control" id="editOtherDeduction" type="number" step=".01" value="${Number(row.other_deduction||0)}">
+</div>
+</div>
+<div class="form-grid">
+<div class="form-group">
+<label>Loan</label>
+<select class="form-control" id="editLoanEligible">
+<option value="yes" ${row.loan_eligible?"selected":""}>Eligible</option>
+<option value="no" ${!row.loan_eligible?"selected":""}>Not Eligible</option>
+</select>
+</div>
+<div class="form-group">
+<label>Loan Deduction</label>
+<input class="form-control" id="editLoanDeduction" type="number" step=".01" value="${Number(row.loan_deduction||0)}">
+</div>
+</div>
+<div class="form-group">
+<label>Total Deduction</label>
+<input class="form-control" id="editTotalDeduction" type="number" step=".01" value="${Number(row.total_deduction||0)}">
+</div>
+<div class="form-grid">
+<div class="form-group">
+<label>Working Days</label>
+<input class="form-control" id="editWorkingDays" type="number" value="${Number(row.working_days||0)}">
+</div>
+<div class="form-group">
+<label>Present Days</label>
+<input class="form-control" id="editPresentDays" type="number" value="${Number(row.present_days||0)}">
+</div>
+</div>
+<div class="form-grid">
+<div class="form-group">
+<label>Absent Days</label>
+<input class="form-control" id="editAbsentDays" type="number" value="${Number(row.absent_days||0)}">
+</div>
+<div class="form-group">
+<label>Leave Days</label>
+<input class="form-control" id="editLeaveDays" type="number" value="${Number(row.leave_days||0)}">
+</div>
+</div>
+<div class="form-group">
+<label>Net Salary</label>
+<input class="form-control" id="editAmount" type="number" step=".01" value="${Number(row.amount||0)}">
+</div>
+<div class="form-group">
+<label>Note</label>
+<textarea class="form-control" id="editNote">${esc(row.note||"")}</textarea>
+</div>`;
 }
 
 if(
@@ -2332,47 +2590,48 @@ document
 let table;
 let payload;
 
-if(
-type==="salary"
-){
-
-table=
-"salary_entries";
-
+if(type==="salary"){
+table="salary_entries";
 payload={
-amount:
-Number(
-document
-.getElementById(
-"editAmount"
-)
-.value
-),
-source:
-document
-.getElementById(
-"editSource"
-)
-.value
-.trim(),
-salary_date:
-document
-.getElementById(
-"editDate"
-)
-.value,
-note:
-document
-.getElementById(
-"editNote"
-)
-.value
-.trim() ||
-null
+amount:Number(document.getElementById("editAmount").value||0),
+source:"Monthly Salary",
+salary_date:document.getElementById("editDate").value,
+salary_month:document.getElementById("editSalaryMonth").value,
+employee_name:document.getElementById("editEmployeeName").value.trim(),
+employee_id:document.getElementById("editEmployeeId").value.trim(),
+designation:document.getElementById("editDesignation").value.trim(),
+company_name:document.getElementById("editCompanyName").value.trim(),
+monthly_basic_salary:Number(document.getElementById("editMonthlyBasic").value||0),
+salary_divisor:Number(document.getElementById("editSalaryDivisor").value||26),
+basic_salary:Number(document.getElementById("editBasicSalary").value||0),
+da_rate:Number(document.getElementById("editDaRate").value||0),
+da:Number(document.getElementById("editDa").value||0),
+hra_rate:Number(document.getElementById("editHraRate").value||0),
+hra:Number(document.getElementById("editHra").value||0),
+other_allowance:Number(document.getElementById("editOtherAllowance").value||0),
+overtime_eligible:document.getElementById("editOvertimeEligible").value==="yes",
+overtime:Number(document.getElementById("editOvertime").value||0),
+gross_salary:Number(document.getElementById("editGrossSalary").value||0),
+pf_enabled:document.getElementById("editPfEnabled").value==="on",
+employee_pf_rate:Number(document.getElementById("editEmployeePfRate").value||0),
+employer_pf_rate:Number(document.getElementById("editEmployerPfRate").value||0),
+pf_deduction:Number(document.getElementById("editEmployeePf").value||0),
+employer_pf:Number(document.getElementById("editEmployerPf").value||0),
+pf_interest_rate:Number(document.getElementById("editPfInterestRate").value||0),
+esic_applicable:document.getElementById("editEsicApplicable").value==="yes",
+esic_deduction:Number(document.getElementById("editEsicDeduction").value||0),
+other_deduction_type:document.getElementById("editOtherDeductionType").value,
+other_deduction:Number(document.getElementById("editOtherDeduction").value||0),
+loan_eligible:document.getElementById("editLoanEligible").value==="yes",
+loan_deduction:Number(document.getElementById("editLoanDeduction").value||0),
+total_deduction:Number(document.getElementById("editTotalDeduction").value||0),
+working_days:Number(document.getElementById("editWorkingDays").value||0),
+present_days:Number(document.getElementById("editPresentDays").value||0),
+absent_days:Number(document.getElementById("editAbsentDays").value||0),
+leave_days:Number(document.getElementById("editLeaveDays").value||0),
+note:document.getElementById("editNote").value.trim()||null
 };
-
 }
-
 if(
 type==="expense"
 ){
@@ -2550,18 +2809,10 @@ if(
 return;
 
 const table=
-type==="salary"
-?
-"salary_entries"
-:
-type==="expense"
-?
-"expenses"
-:
-type==="saving"
-?
-"savings"
-:
+type==="salary"?"salary_entries":
+type==="other_income"?"other_income":
+type==="expense"?"expenses":
+type==="saving"?"savings":
 "attendance";
 
 const{
