@@ -105,9 +105,11 @@ svg{display:block}
 .admin-report-btn{height:39px;padding:0 13px;display:inline-flex;align-items:center;gap:6px;border:1px solid #dfe7f2;border-radius:11px;background:#fff;color:#31445f;font-size:11px;font-weight:700}
 .admin-report-btn.primary{border:0;color:#fff;background:linear-gradient(115deg,#20bfbf,#4e78ff 58%,#8068f5)}
 .admin-report-btn svg{width:15px;height:15px}
-.admin-report-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-bottom:18px}
-.admin-report-chart{height:260px;display:flex;align-items:flex-end;justify-content:space-around;gap:10px;padding:18px}
-.admin-report-chart-item{height:100%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:8px}
+.admin-report-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:18px;margin-bottom:18px}
+.admin-report-grid>.panel{min-width:0;overflow:hidden}
+.admin-report-chart{width:100%;min-width:0;height:260px;display:flex;align-items:flex-end;justify-content:space-around;gap:7px;padding:18px 10px;overflow:hidden}
+.admin-report-chart-item{height:100%;min-width:0;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:8px}
+.admin-report-chart-item strong{max-width:100%;font-size:10px;white-space:nowrap}
 .admin-report-track{width:min(44px,70%);height:180px;background:#f0f4f9;border-radius:11px;display:flex;align-items:flex-end;overflow:hidden}
 .admin-report-bar{width:100%;min-height:4px;border-radius:10px 10px 0 0}
 .admin-report-bar.salary{background:linear-gradient(#54d8a7,#25b77c)}
@@ -2046,7 +2048,7 @@ ${adminReportType==="range"?`<input type="date" value="${adminReportStart}" onch
 <div class="admin-report-grid">
 <div class="panel">
 <div class="panel-head"><h3>Selected Period Statement</h3><span class="badge b-blue">${esc(filterLabel)}</span></div>
-<div class="data-table-wrap">
+<div class="table-wrap">
 <table class="data-table">
 <tbody>
 <tr><td><strong>Total Income</strong></td><td class="amount-green">${money(totalIncome)}</td></tr>
