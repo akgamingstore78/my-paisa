@@ -17,6 +17,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--text:#15223b;--muted:#75829b;--border:rgba(77,96,133,.12);--blue:#4e78ff;--green:#23b879;--red:#ff6478;--purple:#8068f5;--orange:#ff9d42;--cyan:#18c6c7;--sidebar-width:258px;--shadow-sm:0 8px 24px rgba(35,56,96,.07);--shadow-md:0 16px 42px rgba(35,56,96,.10);--shadow-lg:0 24px 60px rgba(35,56,96,.14)}
@@ -93,6 +95,42 @@ svg{display:block}
 .empty{padding:40px 12px;text-align:center;color:#8a97aa}
 .empty strong{display:block;color:#51627d;margin-bottom:5px}
 .badge{display:inline-flex;align-items:center;padding:5px 8px;border-radius:999px;font-size:8px;font-weight:800}
+.admin-report-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.admin-report-tabs{display:flex;gap:7px;flex-wrap:wrap}
+.admin-report-tab{height:38px;padding:0 13px;border:1px solid #dfe7f2;border-radius:11px;background:#fff;color:#40516b;font-size:11px;font-weight:700}
+.admin-report-tab.active{color:#315ce0;background:#edf3ff;border-color:#cfdcff}
+.admin-report-filter{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.admin-report-filter input,.admin-report-filter select{height:38px;padding:0 11px;border:1px solid #dfe7f2;border-radius:11px;background:#fff;color:#33465f;font-size:11px}
+.admin-report-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.admin-report-btn{height:39px;padding:0 13px;display:inline-flex;align-items:center;gap:6px;border:1px solid #dfe7f2;border-radius:11px;background:#fff;color:#31445f;font-size:11px;font-weight:700}
+.admin-report-btn.primary{border:0;color:#fff;background:linear-gradient(115deg,#20bfbf,#4e78ff 58%,#8068f5)}
+.admin-report-btn svg{width:15px;height:15px}
+.admin-report-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-bottom:18px}
+.admin-report-chart{height:260px;display:flex;align-items:flex-end;justify-content:space-around;gap:10px;padding:18px}
+.admin-report-chart-item{height:100%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:8px}
+.admin-report-track{width:min(44px,70%);height:180px;background:#f0f4f9;border-radius:11px;display:flex;align-items:flex-end;overflow:hidden}
+.admin-report-bar{width:100%;min-height:4px;border-radius:10px 10px 0 0}
+.admin-report-bar.salary{background:linear-gradient(#54d8a7,#25b77c)}
+.admin-report-bar.other{background:linear-gradient(#50d8df,#1aa8bc)}
+.admin-report-bar.expense{background:linear-gradient(#ff8999,#ef5369)}
+.admin-report-bar.saving{background:linear-gradient(#a892ff,#785af0)}
+.admin-report-bar.pf{background:linear-gradient(#6aa5ff,#4e78ff)}
+.admin-report-chart-item strong{font-size:11px;color:#31445f}
+.admin-report-chart-item span{font-size:9px;color:#7f8da2}
+.admin-full-overlay{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(27,43,68,.38);backdrop-filter:blur(10px)}
+.admin-full-view{width:min(1180px,100%);max-height:calc(100vh - 40px);display:flex;flex-direction:column;background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 30px 80px rgba(28,48,79,.22)}
+.admin-full-top{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid #e6edf6}
+.admin-full-top h3{font-size:17px}
+.admin-full-top small{display:block;margin-top:3px;color:#8290a5;font-size:10px}
+.admin-full-actions{display:flex;gap:7px}
+.admin-full-icon{width:38px;height:38px;display:grid;place-items:center;border:1px solid #dfe7f2;border-radius:11px;background:#fff;color:#405571}
+.admin-full-icon.download{color:#15926b;background:#ecfff7;border-color:#ccefe1}
+.admin-full-icon svg{width:17px;height:17px}
+.admin-full-body{overflow:auto;padding:18px;background:#f8fbff}
+.admin-full-summary{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin-bottom:16px}
+.admin-full-summary div{padding:13px;border:1px solid #e8eef6;border-radius:14px;background:#fff}
+.admin-full-summary span{display:block;color:#8090a5;font-size:9px;margin-bottom:6px}
+.admin-full-summary strong{font-size:16px;color:#20324d}
 .b-green{color:#168c60;background:#e8fbf2}
 .b-red{color:#d94b61;background:#fff0f2}
 .b-orange{color:#d88328;background:#fff4e7}
@@ -159,6 +197,16 @@ textarea.form-control{padding:12px;min-height:90px;resize:vertical}
 .filters{width:100%}
 .filter{flex:1;min-width:0}
 .form-grid{grid-template-columns:1fr}
+.admin-report-grid{grid-template-columns:1fr}
+.admin-report-toolbar{align-items:flex-start}
+.admin-report-filter{width:100%}
+.admin-report-filter input,.admin-report-filter select{flex:1;min-width:120px}
+.admin-full-overlay{padding:8px}
+.admin-full-view{max-height:calc(100vh - 16px);border-radius:16px}
+.admin-full-body{padding:10px}
+.admin-full-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.admin-full-summary div{padding:9px}
+.admin-full-summary strong{font-size:12px}
 }
 </style>
 </head>
@@ -350,6 +398,11 @@ let savingRows=[];
 let attendanceRows=[];
 let autoAttendanceEnabled=false;
 let activeSection="dashboard";
+let adminReportType="month";
+let adminReportMonth=new Date().toISOString().slice(0,7);
+let adminReportYear=String(new Date().getFullYear());
+let adminReportStart="";
+let adminReportEnd="";
 
 document.addEventListener(
 "DOMContentLoaded",
@@ -1957,66 +2010,225 @@ lucide.createIcons();
 }
 
 function renderReports(){
-
-const total=
-totals();
-
-document
-.getElementById(
-"content"
-)
-.innerHTML=`
-
+const data=getAdminReportData();
+const salaryTotal=sum(data.salary);
+const otherTotal=sum(data.other);
+const expenseTotal=sum(data.expense);
+const savingTotal=sum(data.saving);
+const employeePF=data.salary.reduce((s,r)=>s+(r.pf_enabled===false?0:Number(r.pf_deduction||0)),0);
+const employerPF=data.salary.reduce((s,r)=>s+(r.pf_enabled===false?0:Number(r.employer_pf||0)),0);
+const totalIncome=salaryTotal+otherTotal;
+const available=totalIncome-expenseTotal-savingTotal;
+const max=Math.max(salaryTotal,otherTotal,expenseTotal,savingTotal,employeePF,1);
+const filterLabel=getAdminReportLabel();
+document.getElementById("content").innerHTML=`
 <div class="page-head">
-
-<div>
-
-<h2>Reports</h2>
-
-<p>
-Overall financial summary.
-</p>
-
+<div><h2>Reports</h2><p>View and download complete financial reports.</p></div>
 </div>
-
+<div class="admin-report-toolbar">
+<div class="admin-report-tabs">
+<button class="admin-report-tab ${adminReportType==="month"?"active":""}" onclick="changeAdminReportType('month')">Monthly</button>
+<button class="admin-report-tab ${adminReportType==="year"?"active":""}" onclick="changeAdminReportType('year')">Yearly</button>
+<button class="admin-report-tab ${adminReportType==="range"?"active":""}" onclick="changeAdminReportType('range')">Date Range</button>
 </div>
-
+<div class="admin-report-filter">
+${adminReportType==="month"?`<input type="month" value="${adminReportMonth}" onchange="adminReportMonth=this.value;renderReports()">`:""}
+${adminReportType==="year"?`<select onchange="adminReportYear=this.value;renderReports()">${getAdminReportYears().map(y=>`<option value="${y}" ${String(y)===String(adminReportYear)?"selected":""}>${y}</option>`).join("")}</select>`:""}
+${adminReportType==="range"?`<input type="date" value="${adminReportStart}" onchange="adminReportStart=this.value;renderReports()"><input type="date" value="${adminReportEnd}" onchange="adminReportEnd=this.value;renderReports()">`:""}
+</div>
+</div>
 <div class="stats-grid">
-
-<div class="stat-card s1">
-<small>Total Salary</small>
-<strong>
-${money(total.totalSalary)}
-</strong>
+<div class="stat-card s1"><small>Salary</small><strong>${money(salaryTotal)}</strong></div>
+<div class="stat-card s4"><small>Other Income</small><strong>${money(otherTotal)}</strong></div>
+<div class="stat-card s2"><small>Expenses</small><strong>${money(expenseTotal)}</strong></div>
+<div class="stat-card s3"><small>Savings</small><strong>${money(savingTotal)}</strong></div>
 </div>
-
-<div class="stat-card s2">
-<small>Total Expenses</small>
-<strong>
-${money(total.totalExpenses)}
-</strong>
+<div class="admin-report-grid">
+<div class="panel">
+<div class="panel-head"><h3>Selected Period Statement</h3><span class="badge b-blue">${esc(filterLabel)}</span></div>
+<div class="data-table-wrap">
+<table class="data-table">
+<tbody>
+<tr><td><strong>Total Income</strong></td><td class="amount-green">${money(totalIncome)}</td></tr>
+<tr><td>Employee PF</td><td>${money(employeePF)}</td></tr>
+<tr><td>Employer PF</td><td>${money(employerPF)}</td></tr>
+<tr><td>Expenses</td><td class="amount-red">-${money(expenseTotal)}</td></tr>
+<tr><td>Savings</td><td class="amount-purple">-${money(savingTotal)}</td></tr>
+<tr><td><strong>Net Cash Change</strong></td><td class="amount-green"><strong>${money(available)}</strong></td></tr>
+</tbody>
+</table>
 </div>
-
-<div class="stat-card s3">
-<small>Total Savings</small>
-<strong>
-${money(total.totalSavings)}
-</strong>
+<div class="admin-report-actions">
+<button class="admin-report-btn primary" onclick="openAdminFullReport()"><i data-lucide="eye"></i> View Report</button>
+<button class="admin-report-btn" onclick="downloadAdminReportPDF()"><i data-lucide="download"></i> Download PDF</button>
 </div>
-
-<div class="stat-card s4">
-<small>Available</small>
-<strong>
-${money(total.available)}
-</strong>
 </div>
-
+<div class="panel">
+<div class="panel-head"><h3>Financial Graph</h3><span class="badge b-blue">${esc(filterLabel)}</span></div>
+<div class="admin-report-chart">
+<div class="admin-report-chart-item"><strong>${money(salaryTotal)}</strong><div class="admin-report-track"><div class="admin-report-bar salary" style="height:${salaryTotal/max*100}%"></div></div><span>Salary</span></div>
+<div class="admin-report-chart-item"><strong>${money(otherTotal)}</strong><div class="admin-report-track"><div class="admin-report-bar other" style="height:${otherTotal/max*100}%"></div></div><span>Other</span></div>
+<div class="admin-report-chart-item"><strong>${money(expenseTotal)}</strong><div class="admin-report-track"><div class="admin-report-bar expense" style="height:${expenseTotal/max*100}%"></div></div><span>Expense</span></div>
+<div class="admin-report-chart-item"><strong>${money(savingTotal)}</strong><div class="admin-report-track"><div class="admin-report-bar saving" style="height:${savingTotal/max*100}%"></div></div><span>Saving</span></div>
+<div class="admin-report-chart-item"><strong>${money(employeePF)}</strong><div class="admin-report-track"><div class="admin-report-bar pf" style="height:${employeePF/max*100}%"></div></div><span>PF</span></div>
 </div>
-
-`;
-
+</div>
+</div>`;
+lucide.createIcons();
 }
-
+function changeAdminReportType(type){
+adminReportType=type;
+renderReports();
+}
+function getAdminReportYears(){
+const years=new Set([new Date().getFullYear()]);
+[...salaryRows,...otherIncomeRows,...expenseRows,...savingRows].forEach(row=>{
+const d=row.salary_date||row.income_date||row.expense_date||row.saving_date;
+if(d)years.add(Number(String(d).slice(0,4)));
+});
+return [...years].sort((a,b)=>b-a);
+}
+function getAdminReportData(){
+const match=date=>{
+if(!date)return false;
+if(adminReportType==="month")return String(date).slice(0,7)===adminReportMonth;
+if(adminReportType==="year")return String(date).slice(0,4)===String(adminReportYear);
+if(adminReportType==="range"){
+if(adminReportStart&&date<adminReportStart)return false;
+if(adminReportEnd&&date>adminReportEnd)return false;
+return true;
+}
+return true;
+};
+return{
+salary:salaryRows.filter(r=>match(r.salary_date)),
+other:otherIncomeRows.filter(r=>match(r.income_date)),
+expense:expenseRows.filter(r=>match(r.expense_date)),
+saving:savingRows.filter(r=>match(r.saving_date))
+};
+}
+function getAdminReportLabel(){
+if(adminReportType==="month"){
+const[y,m]=adminReportMonth.split("-").map(Number);
+return new Date(y,m-1,1).toLocaleDateString("en-IN",{month:"long",year:"numeric"});
+}
+if(adminReportType==="year")return adminReportYear;
+return`${adminReportStart?dateFmt(adminReportStart):"Start"} - ${adminReportEnd?dateFmt(adminReportEnd):"End"}`;
+}
+function getAdminReportEntries(){
+const data=getAdminReportData();
+const rows=[];
+data.salary.forEach(r=>rows.push({date:r.salary_date,type:"Salary",source:r.company_name||"MUNITIONS INDIA LTD",note:r.note||"-",amount:Number(r.amount||0),dir:"in"}));
+data.other.forEach(r=>rows.push({date:r.income_date,type:"Other Income",source:r.source||"Other Income",note:r.note||"-",amount:Number(r.amount||0),dir:"in"}));
+data.expense.forEach(r=>rows.push({date:r.expense_date,type:"Expense",source:r.category||"Expense",note:r.note||"-",amount:Number(r.amount||0),dir:"out"}));
+data.saving.forEach(r=>rows.push({date:r.saving_date,type:"Saving",source:r.source||"Saving",note:r.note||"-",amount:Number(r.amount||0),dir:"out"}));
+return rows.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+}
+function openAdminFullReport(){
+const old=document.getElementById("adminFullReport");
+if(old)old.remove();
+const data=getAdminReportData();
+const entries=getAdminReportEntries();
+const salaryTotal=sum(data.salary);
+const otherTotal=sum(data.other);
+const expenseTotal=sum(data.expense);
+const savingTotal=sum(data.saving);
+const employeePF=data.salary.reduce((s,r)=>s+(r.pf_enabled===false?0:Number(r.pf_deduction||0)),0);
+const employerPF=data.salary.reduce((s,r)=>s+(r.pf_enabled===false?0:Number(r.employer_pf||0)),0);
+const net=salaryTotal+otherTotal-expenseTotal-savingTotal;
+const overlay=document.createElement("div");
+overlay.id="adminFullReport";
+overlay.className="admin-full-overlay";
+overlay.innerHTML=`
+<div class="admin-full-view" onclick="event.stopPropagation()">
+<div class="admin-full-top">
+<div><h3>Complete Financial Report</h3><small>${esc(getAdminReportLabel())}</small></div>
+<div class="admin-full-actions">
+<button class="admin-full-icon download" onclick="downloadAdminReportPDF()" title="Download PDF"><i data-lucide="download"></i></button>
+<button class="admin-full-icon" onclick="closeAdminFullReport()" title="Close"><i data-lucide="x"></i></button>
+</div>
+</div>
+<div class="admin-full-body">
+<div class="admin-full-summary">
+<div><span>Salary</span><strong>${money(salaryTotal)}</strong></div>
+<div><span>Other Income</span><strong>${money(otherTotal)}</strong></div>
+<div><span>Expenses</span><strong class="amount-red">${money(expenseTotal)}</strong></div>
+<div><span>Savings</span><strong class="amount-purple">${money(savingTotal)}</strong></div>
+<div><span>PF Total</span><strong>${money(employeePF+employerPF)}</strong></div>
+<div><span>Net</span><strong class="amount-green">${money(net)}</strong></div>
+</div>
+<div class="panel">
+<div class="panel-head"><h3>PF Summary</h3></div>
+<div class="table-wrap"><table class="data-table"><tbody>
+<tr><td>Employee PF</td><td>${money(employeePF)}</td></tr>
+<tr><td>Employer PF</td><td>${money(employerPF)}</td></tr>
+<tr><td><strong>Total PF</strong></td><td><strong>${money(employeePF+employerPF)}</strong></td></tr>
+</tbody></table></div>
+</div>
+<div class="panel">
+<div class="panel-head"><h3>All Entries</h3></div>
+<div class="table-wrap"><table class="data-table">
+<thead><tr><th>Date</th><th>Type</th><th>Source / Category</th><th>Note</th><th>Amount</th></tr></thead>
+<tbody>${entries.length?entries.map(r=>`<tr><td>${dateFmt(r.date)}</td><td><strong>${esc(r.type)}</strong></td><td>${esc(r.source)}</td><td>${esc(r.note)}</td><td class="${r.dir==="in"?"amount-green":"amount-red"}">${r.dir==="out"?"-":"+"}${money(r.amount)}</td></tr>`).join(""):`<tr><td colspan="5"><div class="empty"><strong>No records found</strong></div></td></tr>`}</tbody>
+</table></div>
+</div>
+</div>
+</div>`;
+overlay.onclick=closeAdminFullReport;
+document.body.appendChild(overlay);
+document.body.style.overflow="hidden";
+lucide.createIcons();
+}
+function closeAdminFullReport(){
+document.getElementById("adminFullReport")?.remove();
+document.body.style.overflow="";
+}
+function downloadAdminReportPDF(){
+if(!window.jspdf?.jsPDF){
+showToast("PDF library not loaded");
+return;
+}
+const data=getAdminReportData();
+const entries=getAdminReportEntries();
+const salaryTotal=sum(data.salary);
+const otherTotal=sum(data.other);
+const expenseTotal=sum(data.expense);
+const savingTotal=sum(data.saving);
+const employeePF=data.salary.reduce((s,r)=>s+(r.pf_enabled===false?0:Number(r.pf_deduction||0)),0);
+const employerPF=data.salary.reduce((s,r)=>s+(r.pf_enabled===false?0:Number(r.employer_pf||0)),0);
+const net=salaryTotal+otherTotal-expenseTotal-savingTotal;
+const{jsPDF}=window.jspdf;
+const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+const fmt=v=>"Rs. "+Number(v||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+doc.setFont("helvetica","bold");
+doc.setFontSize(18);
+doc.text("MY PAISA - ADMIN REPORT",14,18);
+doc.setFont("helvetica","normal");
+doc.setFontSize(10);
+doc.text(getAdminReportLabel(),14,25);
+doc.autoTable({
+startY:31,
+head:[["Summary","Amount"]],
+body:[
+["Salary",fmt(salaryTotal)],
+["Other Income",fmt(otherTotal)],
+["Expenses",fmt(expenseTotal)],
+["Savings",fmt(savingTotal)],
+["Employee PF",fmt(employeePF)],
+["Employer PF",fmt(employerPF)],
+["Net Cash Change",fmt(net)]
+],
+styles:{fontSize:9}
+});
+doc.autoTable({
+startY:doc.lastAutoTable.finalY+8,
+head:[["Date","Type","Source / Category","Note","Amount"]],
+body:entries.map(r=>[dateFmt(r.date),r.type,r.source,r.note,(r.dir==="out"?"-":"+")+fmt(r.amount)]),
+styles:{fontSize:8},
+headStyles:{fillColor:[78,120,255]}
+});
+doc.save(`My-Paisa-Admin-Report-${adminReportType}-${adminReportType==="month"?adminReportMonth:adminReportType==="year"?adminReportYear:"range"}.pdf`);
+}
 function getRow(
 type,
 id
