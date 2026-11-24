@@ -8050,38 +8050,116 @@ async function clearAttendance(){
   await loadAttendanceData();
 }
 
-async function saveAttendance(){
-  const date=document.getElementById("attendanceDate").value;
-  const status=document.getElementById("attendanceStatus").value;
-  const note=document.getElementById("attendanceNote").value.trim();
+function computeAttendanceMetrics(status, cleanIn, cleanOut, noteText = "") {
+  if (status !== "present") {
+    return { workingHr: null, lateMin: null };
+  }
+
+  let resolvedIn = cleanIn && String(cleanIn).trim() !== "-" && String(cleanIn).trim() !== "—"
+    ? String(cleanIn).trim()
+    : "";
+  let resolvedOut = cleanOut && String(cleanOut).trim() !== "-" && String(cleanOut).trim() !== "—"
+    ? String(cleanOut).trim()
+    : "";
+
+  if (noteText) {
+    if (!resolvedIn) {
+      const mIn = String(noteText).match(/(?:late\s*entry|entry|in)\s*[-:]?\s*(\d{1,2}[:.]\d{2}(?:[:.]\d{2})?\s*(?:am|pm)?)/i);
+      if (mIn) resolvedIn = mIn[1].trim();
+    }
+    if (!resolvedOut) {
+      const mOut = String(noteText).match(/(?:exit\s*entry|exit|out)\s*[-:]?\s*(\d{1,2}[:.]\d{2}(?:[:.]\d{2})?\s*(?:am|pm)?)/i);
+      if (mOut) resolvedOut = mOut[1].trim();
+    }
+  }
+
+  const parseMinutes = (tStr, isOut) => {
+    if (!tStr || tStr === "-" || tStr === "—") return null;
+    const m = String(tStr).match(/(\d{1,2})[:.](\d{2})(?:[:.](\d{2}))?/);
+    if (!m) return null;
+    let h = parseInt(m[1], 10);
+    const min = parseInt(m[2], 10);
+    const sec = m[3] ? parseInt(m[3], 10) : 0;
+    const lower = String(tStr).toLowerCase();
+    if (lower.includes("pm") && h < 12) h += 12;
+    else if (lower.includes("am") && h === 12) h = 0;
+    else if (!lower.includes("am") && !lower.includes("pm") && isOut && h < 8) h += 12;
+    return h * 60 + min + sec / 60;
+  };
+
+  const inMins = parseMinutes(resolvedIn, false);
+  const outMins = parseMinutes(resolvedOut, true);
+
+  let workingHr = null;
+  if (inMins !== null && outMins !== null) {
+    const windowStart = 7 * 60 + 55; // 07:55 AM
+    const windowEnd = 16 * 60 + 55;  // 04:55 PM
+    const effectiveIn = Math.max(inMins, windowStart);
+    const effectiveOut = Math.min(outMins, windowEnd);
+
+    if (effectiveOut > effectiveIn) {
+      const totalMins = Math.floor(effectiveOut - effectiveIn);
+      const hrs = Math.floor(totalMins / 60);
+      const mins = totalMins % 60;
+      workingHr = `${hrs}h ${String(mins).padStart(2, "0")}m`;
+    }
+  }
+
+  let lateMin = null;
+  if (inMins !== null) {
+    const lateThreshold = 8 * 60 + 14; // 08:14 AM (after 08:13:59)
+    const baseEightAM = 8 * 60;      // 08:00 AM
+    if (inMins >= lateThreshold) {
+      lateMin = `${Math.floor(inMins - baseEightAM)}m`;
+    }
+  }
+
+  return { workingHr, lateMin };
+}
+
+async function saveAttendance() {
+  const date = document.getElementById("attendanceDate").value;
+  const status = document.getElementById("attendanceStatus").value;
+  const note = document.getElementById("attendanceNote").value.trim();
   const rawIn = document.getElementById("attendanceInTime")?.value?.trim() || "";
   const rawOut = document.getElementById("attendanceOutTime")?.value?.trim() || "";
-  if(!status){
+
+  if (!status) {
     showToast("Please select Present, Absent, Leave or Holiday.");
     return;
   }
-  const inTime = status === "present" ? formatPunchDisplayValue(rawIn) : null;
-  const outTime = status === "present" ? formatPunchDisplayValue(rawOut) : null;
 
-  const{error}=await db.from("attendance").upsert({
-    user_id:currentUser.id,
-    attendance_date:date,
-    status:status,
-    in_time:inTime,
-    out_time:outTime,
-    note:note||null,
-    updated_at:new Date().toISOString()
-  },{onConflict:"user_id,attendance_date"});
-  if(error){
+  const inTime = status === "present" ? (rawIn ? formatPunchDisplayValue(rawIn) : "-") : null;
+  const outTime = status === "present" ? (rawOut ? formatPunchDisplayValue(rawOut) : "-") : null;
+  const { workingHr, lateMin } = computeAttendanceMetrics(
+    status,
+    rawIn || inTime,
+    rawOut || outTime,
+    note
+  );
+
+  const { error } = await db.from("attendance").upsert({
+    user_id: currentUser.id,
+    attendance_date: date,
+    status: status,
+    in_time: inTime,
+    out_time: outTime,
+    working_hr: workingHr,
+    late_min: lateMin,
+    note: note || null,
+    updated_at: new Date().toISOString()
+  }, { onConflict: "user_id,attendance_date" });
+
+  if (error) {
     console.error(error);
-    showToast("Attendance save error: "+error.message);
+    showToast("Attendance save error: " + error.message);
     return;
   }
+
   closeAttendanceEditor();
   showToast("Attendance saved.");
   await loadAttendanceData();
 }
-
 function renderGoalsPage() {
 
   const section =
@@ -9045,41 +9123,71 @@ function downloadAttendanceSlip(){
   doc.save(`Attendance-Slip-${monthName.replace(/\s+/g,"-")}.pdf`);
   showToast("Attendance slip downloaded successfully.");
 }
-// Helper to safely read actual In/Out times from database records (No fake guessing)
+// Helper to parse attendance times, 07:55 AM - 04:55 PM working hours, and 08:14+ late minutes
 function parseAttendanceRowDetails(r) {
-  const cleanIn = r.in_time && String(r.in_time).trim() !== "-" ? String(r.in_time).trim() : "-";
-  const cleanOut = r.out_time && String(r.out_time).trim() !== "-" ? String(r.out_time).trim() : "-";
-  let inTime = r.status === "present" ? cleanIn : "—";
-  let outTime = r.status === "present" ? cleanOut : "—";
-  let noteText = r.note ? String(r.note).trim() : "—";
+  let cleanIn = r.in_time && String(r.in_time).trim() !== "-" ? String(r.in_time).trim() : "-";
+  let cleanOut = r.out_time && String(r.out_time).trim() !== "-" ? String(r.out_time).trim() : "-";
+  const noteText = r.note ? String(r.note).trim() : "—";
 
-  // Calculate Working Hours only if real in_time and out_time exist in database
+  // Fallback: if in_time / out_time column is "-" and note contains entry/exit time
+  if (r.status === "present" && noteText !== "—") {
+    if (cleanIn === "-") {
+      const mIn = noteText.match(/(?:late\s*entry|entry|in)\s*[-:]?\s*(\d{1,2}[:.]\d{2}(?:[:.]\d{2})?\s*(?:am|pm)?)/i);
+      if (mIn) cleanIn = mIn[1].trim();
+    }
+    if (cleanOut === "-") {
+      const mOut = noteText.match(/(?:exit\s*entry|exit|out)\s*[-:]?\s*(\d{1,2}[:.]\d{2}(?:[:.]\d{2})?\s*(?:am|pm)?)/i);
+      if (mOut) cleanOut = mOut[1].trim();
+    }
+  }
+
+  const inTime = r.status === "present" ? cleanIn : "—";
+  const outTime = r.status === "present" ? cleanOut : "—";
+
+  const parseMinutes = (tStr, isOut) => {
+    if (!tStr || tStr === "-" || tStr === "—") return null;
+    const m = tStr.match(/(\d{1,2})[:.](\d{2})(?:[:.](\d{2}))?/);
+    if (!m) return null;
+    let h = parseInt(m[1], 10);
+    const min = parseInt(m[2], 10);
+    const sec = m[3] ? parseInt(m[3], 10) : 0;
+    const lower = tStr.toLowerCase();
+    if (lower.includes("pm") && h < 12) h += 12;
+    else if (lower.includes("am") && h === 12) h = 0;
+    else if (!lower.includes("am") && !lower.includes("pm") && isOut && h < 8) h += 12;
+    return h * 60 + min + sec / 60;
+  };
+
+  const inMins = r.status === "present" ? parseMinutes(cleanIn, false) : null;
+  const outMins = r.status === "present" ? parseMinutes(cleanOut, true) : null;
+
+  // Working Hr: 07:55 AM (475m) se 04:55 PM (1015m) ke beech
   let workingHr = "—";
-  if (r.status === "present" && cleanIn !== "-" && cleanOut !== "-") {
-    const parseMinutes = (tStr, isOut) => {
-      if (!tStr) return null;
-      const m = tStr.match(/(\d{1,2})[:.](\d{2})/);
-      if (!m) return null;
-      let h = parseInt(m[1], 10);
-      let min = parseInt(m[2], 10);
-      const lower = tStr.toLowerCase();
-      if (lower.includes("pm") && h < 12) h += 12;
-      else if (lower.includes("am") && h === 12) h = 0;
-      else if (!lower.includes("am") && !lower.includes("pm") && isOut && h < 8) h += 12;
-      return h * 60 + min;
-    };
+  if (r.status === "present" && inMins !== null && outMins !== null) {
+    const windowStart = 7 * 60 + 55; // 07:55 AM
+    const windowEnd = 16 * 60 + 55;  // 04:55 PM
+    const effectiveIn = Math.max(inMins, windowStart);
+    const effectiveOut = Math.min(outMins, windowEnd);
 
-    const inMins = parseMinutes(inTime, false);
-    const outMins = parseMinutes(outTime, true);
-    if (inMins !== null && outMins !== null && outMins > inMins) {
-      const diff = outMins - inMins;
-      const hrs = Math.floor(diff / 60);
-      const mins = diff % 60;
+    if (effectiveOut > effectiveIn) {
+      const totalMins = Math.floor(effectiveOut - effectiveIn);
+      const hrs = Math.floor(totalMins / 60);
+      const mins = totalMins % 60;
       workingHr = `${hrs}h ${String(mins).padStart(2, "0")}m`;
     }
   }
 
-  const lateMin = r.late_minutes && Number(r.late_minutes) > 0 ? `${r.late_minutes}m` : "—";
+  // Late Min: 08:13:59 tak late nahi; 08:14 AM (494m) ya uske baad se minutes count
+  let lateMin = "—";
+  if (r.status === "present" && inMins !== null) {
+    const lateThreshold = 8 * 60 + 14; // 08:14 AM
+    const baseEightAM = 8 * 60;      // 08:00 AM
+    if (inMins >= lateThreshold) {
+      const lateCount = Math.floor(inMins - baseEightAM);
+      lateMin = `${lateCount}m`;
+    }
+  }
+
   const dateObj = new Date(r.attendance_date + "T00:00:00");
   const formattedDate = isNaN(dateObj) ? r.attendance_date : dateObj.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
 
@@ -9087,16 +9195,13 @@ function parseAttendanceRowDetails(r) {
     formattedDate,
     status: (r.status || "—").toUpperCase(),
     rawStatus: r.status || "",
-    inTime: inTime,
-    outTime: outTime,
+    inTime,
+    outTime,
     workingHr,
     lateMin,
     note: noteText
   };
 }
-
-// 1. Open Attendance Slip Single-Page A4 View (Clean Sample Style, No Scroll)
-// 1. Open Attendance Slip Full-Screen A4 View (Puri Screen cover karega, no scroll)
 function openAttendanceSlipModal() {
   const existing = document.getElementById("salarySlipOverlay");
   if (existing) existing.remove();
@@ -9108,16 +9213,16 @@ function openAttendanceSlipModal() {
       <div class="salary-slip-window" style="width: 100vw; height: 100vh; max-width: 100vw; max-height: 100vh; border-radius: 0; overflow: hidden; display: flex; flex-direction: column; background: #eef3f9;">
         
         <!-- Top Toolbar spanning full width -->
-        <div class="salary-slip-toolbar" style="padding: 12px 24px; flex-shrink: 0; background: #1e293b; color: #fff; border-bottom: 1px solid #334155;">
-          <strong style="font-size: 15px; letter-spacing: 0.3px;">Attendance Slip - ${monthName}</strong>
-          <div class="salary-slip-toolbar-actions" style="display: flex; gap: 10px;">
-            <button type="button" class="slip-download" onclick="downloadAttendanceSlipPDF()" style="height: 34px; padding: 0 14px; font-size: 12px; font-weight: 700; background: #4e78ff; color: #fff; border: none; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"><i data-lucide="download" style="width: 14px; height: 14px;"></i> Download PDF</button>
-            <button type="button" onclick="closeSalarySlip()" style="height: 34px; padding: 0 14px; font-size: 12px; font-weight: 700; background: #334155; color: #fff; border: none; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"><i data-lucide="x" style="width: 14px; height: 14px;"></i> Close</button>
+        <div class="salary-slip-toolbar" style="padding: 10px 16px; flex-shrink: 0; background: #1e293b; color: #fff; border-bottom: 1px solid #334155;">
+          <strong style="font-size: 13px; letter-spacing: 0.3px;">Attendance Slip - ${escapeHTML(monthName)}</strong>
+          <div class="salary-slip-toolbar-actions" style="display: flex; gap: 8px;">
+            <button type="button" class="slip-download" onclick="downloadAttendanceSlipPDF()" style="height: 34px; padding: 0 12px; font-size: 12px; font-weight: 700; background: #4e78ff; color: #fff; border: none; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"><i data-lucide="download" style="width: 14px; height: 14px;"></i> Download PDF</button>
+            <button type="button" onclick="closeSalarySlip()" style="height: 34px; padding: 0 12px; font-size: 12px; font-weight: 700; background: #334155; color: #fff; border: none; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"><i data-lucide="x" style="width: 14px; height: 14px;"></i> Close</button>
           </div>
         </div>
 
-        <!-- Center Area displaying the full A4 Page -->
-        <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 16px; overflow: hidden;">
+        <!-- Center Area displaying the A4 Page (scrollable safely on small screens) -->
+        <div style="flex: 1; width: 100%; overflow: auto; padding: 10px; box-sizing: border-box; display: flex; align-items: flex-start; justify-content: center;">
           ${getAttendanceSlipHTML()}
         </div>
       </div>
@@ -9126,9 +9231,8 @@ function openAttendanceSlipModal() {
   lucide.createIcons();
 }
 
-// Attendance Slip A4 Document Generator (Full screen optimal sizing)
-// Attendance Slip A4 Document Generator (Expanded to fill full screen height & width properly)
 function getAttendanceSlipHTML() {
+  const isMobile = window.innerWidth <= 640;
   const monthName = new Date(attendanceYear, attendanceMonth, 1).toLocaleDateString("en-IN", { month: "long", year: "numeric" });
 
   const factoryDays = attendanceRows.filter(r => r.status !== "holiday").length;
@@ -9136,87 +9240,21 @@ function getAttendanceSlipHTML() {
   const absentDays = attendanceRows.filter(r => r.status === "absent").length;
   const leaveDays = attendanceRows.filter(r => r.status === "leave").length;
 
-  let rowsHTML = attendanceRows.map(r => {
-    const d = parseAttendanceRowDetails(r);
-    const statusColor = d.rawStatus === "present" ? "#169866" : d.rawStatus === "absent" ? "#e15167" : d.rawStatus === "leave" ? "#f08b29" : "#334155";
-    return `
-      <tr>
-        <td style="padding: 8px 12px; border: 1px solid #cbd5e1; white-space: nowrap; color: #334155; font-weight: 600; font-size: 11px;">${d.formattedDate}</td>
-        <td style="padding: 8px 12px; border: 1px solid #cbd5e1; font-weight: 800; color: ${statusColor}; white-space: nowrap; font-size: 11px;">${d.status}</td>
-        <td style="padding: 8px 12px; border: 1px solid #cbd5e1; white-space: nowrap; color: #1e293b; font-size: 11px;">${escapeHTML(d.inTime)}</td>
-        <td style="padding: 8px 12px; border: 1px solid #cbd5e1; white-space: nowrap; color: #1e293b; font-size: 11px;">${escapeHTML(d.outTime)}</td>
-        <td style="padding: 8px 12px; border: 1px solid #cbd5e1; white-space: nowrap; font-weight: 700; color: #0f172a; font-size: 11px;">${d.workingHr}</td>
-        <td style="padding: 8px 12px; border: 1px solid #cbd5e1; white-space: nowrap; color: ${d.lateMin !== '—' ? '#e15167' : '#64748b'}; font-size: 11px;">${d.lateMin}</td>
-        <td style="padding: 8px 12px; border: 1px solid #cbd5e1; color: #475569; font-size: 11px;">${escapeHTML(d.note)}</td>
-      </tr>
-    `;
-  }).join("");
-
-  if (!attendanceRows.length) {
-    rowsHTML = `<tr><td colspan="7" style="text-align: center; padding: 40px; color: #888; border: 1px solid #cbd5e1; font-size: 13px;">No attendance records found for this month.</td></tr>`;
-  }
-
-  return `
-    <div id="attendanceSlipDocument" style="width: 96vw; max-width: 1200px; height: 90vh; background: #fff; color: #1e293b; padding: 24px 32px; border: 1px solid #cbd5e1; box-shadow: 0 10px 30px rgba(0,0,0,0.2); font-family: Arial, sans-serif; display: flex; flex-direction: column; justify-content: space-between; border-radius: 10px; overflow-y: auto;">
-      <div>
-        <div style="text-align: center; margin-bottom: 16px; border-bottom: 2px solid #1e3a5f; padding-bottom: 12px;">
-          <h1 style="font-size: 22px; margin: 0; color: #0f172a; font-weight: 800; letter-spacing: 0.5px;">ATTENDANCE RECORD</h1>
-          <p style="font-size: 13px; margin: 4px 0 0; color: #475569; font-weight: 700;">MUNITIONS INDIA LIMITED (OFK) • ${monthName.toUpperCase()}</p>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); margin-bottom: 16px; border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 8px; overflow: hidden;">
-          <div style="text-align: center; padding: 10px; border-right: 1px solid #cbd5e1;"><span style="display: block; font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase;">Working Days</span><strong style="font-size: 16px; color: #0f172a;">${factoryDays}</strong></div>
-          <div style="text-align: center; padding: 10px; border-right: 1px solid #cbd5e1;"><span style="display: block; font-size: 10px; color: #166534; font-weight: 700; text-transform: uppercase;">Present</span><strong style="font-size: 16px; color: #169866;">${presentDays}</strong></div>
-          <div style="text-align: center; padding: 10px; border-right: 1px solid #cbd5e1;"><span style="display: block; font-size: 10px; color: #991b1b; font-weight: 700; text-transform: uppercase;">Absent</span><strong style="font-size: 16px; color: #e15167;">${absentDays}</strong></div>
-          <div style="text-align: center; padding: 10px;"><span style="display: block; font-size: 10px; color: #92400e; font-weight: 700; text-transform: uppercase;">Leave</span><strong style="font-size: 16px; color: #f08b29;">${leaveDays}</strong></div>
-        </div>
-
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
-          <thead>
-            <tr style="background: #1e293b; color: #ffffff;">
-              <th style="padding: 8px 12px; border: 1px solid #cbd5e1; font-size: 11px;">Date</th>
-              <th style="padding: 8px 12px; border: 1px solid #cbd5e1; font-size: 11px;">Status</th>
-              <th style="padding: 8px 12px; border: 1px solid #cbd5e1; font-size: 11px;">In Time</th>
-              <th style="padding: 8px 12px; border: 1px solid #cbd5e1; font-size: 11px;">Out Time</th>
-              <th style="padding: 8px 12px; border: 1px solid #cbd5e1; font-size: 11px;">Working Hr</th>
-              <th style="padding: 8px 12px; border: 1px solid #cbd5e1; font-size: 11px;">Late Min</th>
-              <th style="padding: 8px 12px; border: 1px solid #cbd5e1; font-size: 11px;">Note</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rowsHTML}
-          </tbody>
-        </table>
-      </div>
-
-      <div style="margin-top: 16px; padding-top: 8px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 10px; color: #64748b;">
-        Computer generated official attendance record • My Paisa
-      </div>
-    </div>
-  `;
-}
-
-// Attendance Slip Single Full-Width Table A4 Generator
-function getAttendanceSlipHTML() {
-  const monthName = new Date(attendanceYear, attendanceMonth, 1).toLocaleDateString("en-IN", { month: "long", year: "numeric" });
-
-  const factoryDays = attendanceRows.filter(r => r.status !== "holiday").length;
-  const presentDays = attendanceRows.filter(r => r.status === "present").length;
-  const absentDays = attendanceRows.filter(r => r.status === "absent").length;
-  const leaveDays = attendanceRows.filter(r => r.status === "leave").length;
+  const cellPad = isMobile ? "3px 4px" : "2.5px 6px";
+  const fontSize = isMobile ? "7.5px" : "9.5px";
 
   let rowsHTML = attendanceRows.map(r => {
     const d = parseAttendanceRowDetails(r);
     const statusColor = d.rawStatus === "present" ? "#169866" : d.rawStatus === "absent" ? "#e15167" : d.rawStatus === "leave" ? "#f08b29" : "#334155";
     return `
       <tr>
-        <td style="padding: 2.5px 6px; border: 1px solid #dbe3ed; white-space: nowrap; color: #334155;">${d.formattedDate}</td>
-        <td style="padding: 2.5px 6px; border: 1px solid #dbe3ed; font-weight: 800; color: ${statusColor}; white-space: nowrap;">${d.status}</td>
-        <td style="padding: 2.5px 6px; border: 1px solid #dbe3ed; white-space: nowrap; color: #1e293b;">${escapeHTML(d.inTime)}</td>
-        <td style="padding: 2.5px 6px; border: 1px solid #dbe3ed; white-space: nowrap; color: #1e293b;">${escapeHTML(d.outTime)}</td>
-        <td style="padding: 2.5px 6px; border: 1px solid #dbe3ed; white-space: nowrap; font-weight: 600; color: #0f172a;">${d.workingHr}</td>
-        <td style="padding: 2.5px 6px; border: 1px solid #dbe3ed; white-space: nowrap; color: ${d.lateMin !== '—' ? '#e15167' : '#64748b'};">${d.lateMin}</td>
-        <td style="padding: 2.5px 6px; border: 1px solid #dbe3ed; color: #475569; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHTML(d.note)}</td>
+        <td style="padding: ${cellPad}; border: 1px solid #dbe3ed; white-space: nowrap; color: #334155;">${escapeHTML(d.formattedDate)}</td>
+        <td style="padding: ${cellPad}; border: 1px solid #dbe3ed; font-weight: 800; color: ${statusColor}; white-space: nowrap;">${escapeHTML(d.status)}</td>
+        <td style="padding: ${cellPad}; border: 1px solid #dbe3ed; white-space: nowrap; color: #1e293b;">${escapeHTML(d.inTime)}</td>
+        <td style="padding: ${cellPad}; border: 1px solid #dbe3ed; white-space: nowrap; color: #1e293b;">${escapeHTML(d.outTime)}</td>
+        <td style="padding: ${cellPad}; border: 1px solid #dbe3ed; white-space: nowrap; font-weight: 600; color: #0f172a;">${escapeHTML(d.workingHr)}</td>
+        <td style="padding: ${cellPad}; border: 1px solid #dbe3ed; white-space: nowrap; color: ${d.lateMin !== '—' ? '#e15167' : '#64748b'};">${escapeHTML(d.lateMin)}</td>
+        <td style="padding: ${cellPad}; border: 1px solid #dbe3ed; color: #475569; ${isMobile ? "max-width: 90px; white-space: normal; word-break: break-word;" : "max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"}">${escapeHTML(d.note)}</td>
       </tr>
     `;
   }).join("");
@@ -9226,41 +9264,104 @@ function getAttendanceSlipHTML() {
   }
 
   return `
-    <div id="attendanceSlipDocument" style="width: 100%; max-width: 780px; background: #fff; color: #1e293b; padding: 12px 18px; border: 1px solid #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.08); font-family: Arial, sans-serif;">
+    <div id="attendanceSlipDocument" style="width: 100%; max-width: ${isMobile ? "100%" : "780px"}; min-width: 0; box-sizing: border-box; background: #fff; color: #1e293b; padding: ${isMobile ? "10px 8px" : "12px 18px"}; border: 1px solid #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.08); font-family: Arial, sans-serif; border-radius: 6px;">
       <div style="text-align: center; margin-bottom: 8px;">
-        <h1 style="font-size: 16px; margin: 0; color: #0f172a; font-weight: 800; letter-spacing: 0.4px;">ATTENDANCE RECORD</h1>
-        <p style="font-size: 10px; margin: 2px 0 0; color: #475569; font-weight: 700;">MUNITIONS INDIA LIMITED (OFK) • ${monthName.toUpperCase()}</p>
+        <h1 style="font-size: ${isMobile ? "13px" : "16px"}; margin: 0; color: #0f172a; font-weight: 800; letter-spacing: 0.4px;">ATTENDANCE RECORD</h1>
+        <p style="font-size: ${isMobile ? "8.5px" : "10px"}; margin: 2px 0 0; color: #475569; font-weight: 700;">MUNITIONS INDIA LIMITED (OFK) • ${escapeHTML(monthName.toUpperCase())}</p>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); margin-bottom: 8px; border: 1px solid #dbe3ed; background: #f8fafc;">
-        <div style="text-align: center; padding: 5px; border-right: 1px solid #dbe3ed;"><span style="display: block; font-size: 8.5px; color: #64748b; font-weight: 700;">Working Days</span><strong style="font-size: 12px; color: #0f172a;">${factoryDays}</strong></div>
-        <div style="text-align: center; padding: 5px; border-right: 1px solid #dbe3ed;"><span style="display: block; font-size: 8.5px; color: #64748b; font-weight: 700;">Present</span><strong style="font-size: 12px; color: #169866;">${presentDays}</strong></div>
-        <div style="text-align: center; padding: 5px; border-right: 1px solid #dbe3ed;"><span style="display: block; font-size: 8.5px; color: #64748b; font-weight: 700;">Absent</span><strong style="font-size: 12px; color: #e15167;">${absentDays}</strong></div>
-        <div style="text-align: center; padding: 5px;"><span style="display: block; font-size: 8.5px; color: #64748b; font-weight: 700;">Leave</span><strong style="font-size: 12px; color: #f08b29;">${leaveDays}</strong></div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 8px; border: 1px solid #dbe3ed; background: #f8fafc;">
+        <div style="text-align: center; padding: 5px 2px; border-right: 1px solid #dbe3ed;"><span style="display: block; font-size: ${isMobile ? "7px" : "8.5px"}; color: #64748b; font-weight: 700;">Working Days</span><strong style="font-size: ${isMobile ? "10.5px" : "12px"}; color: #0f172a;">${factoryDays}</strong></div>
+        <div style="text-align: center; padding: 5px 2px; border-right: 1px solid #dbe3ed;"><span style="display: block; font-size: ${isMobile ? "7px" : "8.5px"}; color: #64748b; font-weight: 700;">Present</span><strong style="font-size: ${isMobile ? "10.5px" : "12px"}; color: #169866;">${presentDays}</strong></div>
+        <div style="text-align: center; padding: 5px 2px; border-right: 1px solid #dbe3ed;"><span style="display: block; font-size: ${isMobile ? "7px" : "8.5px"}; color: #64748b; font-weight: 700;">Absent</span><strong style="font-size: ${isMobile ? "10.5px" : "12px"}; color: #e15167;">${absentDays}</strong></div>
+        <div style="text-align: center; padding: 5px 2px;"><span style="display: block; font-size: ${isMobile ? "7px" : "8.5px"}; color: #64748b; font-weight: 700;">Leave</span><strong style="font-size: ${isMobile ? "10.5px" : "12px"}; color: #f08b29;">${leaveDays}</strong></div>
       </div>
 
-      <table style="width: 100%; border-collapse: collapse; font-size: 9.5px; line-height: 1.15; text-align: left;">
-        <thead>
-          <tr style="background: #f1f5f9; color: #1e293b;">
-            <th style="padding: 4px 6px; border: 1px solid #dbe3ed;">Date</th>
-            <th style="padding: 4px 6px; border: 1px solid #dbe3ed;">Status</th>
-            <th style="padding: 4px 6px; border: 1px solid #dbe3ed;">In Time</th>
-            <th style="padding: 4px 6px; border: 1px solid #dbe3ed;">Out Time</th>
-            <th style="padding: 4px 6px; border: 1px solid #dbe3ed;">Working Hr</th>
-            <th style="padding: 4px 6px; border: 1px solid #dbe3ed;">Late Min</th>
-            <th style="padding: 4px 6px; border: 1px solid #dbe3ed;">Note</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rowsHTML}
-        </tbody>
-      </table>
+      <div style="width: 100%; overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: ${fontSize}; line-height: 1.2; text-align: left;">
+          <thead>
+            <tr style="background: #f1f5f9; color: #1e293b;">
+              <th style="padding: ${cellPad}; border: 1px solid #dbe3ed;">Date</th>
+              <th style="padding: ${cellPad}; border: 1px solid #dbe3ed;">Status</th>
+              <th style="padding: ${cellPad}; border: 1px solid #dbe3ed;">In Time</th>
+              <th style="padding: ${cellPad}; border: 1px solid #dbe3ed;">Out Time</th>
+              <th style="padding: ${cellPad}; border: 1px solid #dbe3ed;">Working Hr</th>
+              <th style="padding: ${cellPad}; border: 1px solid #dbe3ed;">Late Min</th>
+              <th style="padding: ${cellPad}; border: 1px solid #dbe3ed;">Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHTML}
+          </tbody>
+        </table>
+      </div>
 
       <div style="margin-top: 6px; text-align: center; font-size: 8px; color: #64748b;">
         Computer generated attendance record • My Paisa
       </div>
     </div>
   `;
+}
+
+function downloadAttendanceSlipPDF() {
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    showToast("PDF library not loaded.");
+    return;
+  }
+  const monthName = new Date(attendanceYear, attendanceMonth, 1).toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.setTextColor(15, 23, 42);
+  doc.text("ATTENDANCE RECORD", 105, 13, { align: "center" });
+
+  doc.setFontSize(9);
+  doc.setTextColor(71, 85, 105);
+  doc.text(`MUNITIONS INDIA LIMITED (OFK) • ${monthName.toUpperCase()}`, 105, 18.5, { align: "center" });
+
+  const factoryDays = attendanceRows.filter(r => r.status !== "holiday").length;
+  const presentDays = attendanceRows.filter(r => r.status === "present").length;
+  const absentDays = attendanceRows.filter(r => r.status === "absent").length;
+  const leaveDays = attendanceRows.filter(r => r.status === "leave").length;
+
+  doc.autoTable({
+    startY: 22,
+    theme: "grid",
+    styles: { font: "helvetica", fontSize: 8.5, halign: "center", cellPadding: 2.2, lineColor: [219, 227, 237], lineWidth: 0.25 },
+    head: [["Working Days", "Present", "Absent", "Leave"]],
+    body: [[factoryDays, presentDays, absentDays, leaveDays]],
+    headStyles: { fillColor: [248, 250, 252], textColor: [100, 116, 139], fontStyle: "bold" },
+    bodyStyles: { fontStyle: "bold", textColor: [15, 23, 42] }
+  });
+
+  const tableRows = attendanceRows.map(r => {
+    const d = parseAttendanceRowDetails(r);
+    return [d.formattedDate, d.status, d.inTime, d.outTime, d.workingHr, d.lateMin, d.note];
+  });
+
+  doc.autoTable({
+    startY: doc.lastAutoTable.finalY + 4,
+    theme: "grid",
+    styles: { font: "helvetica", fontSize: 7.5, cellPadding: 1.6, lineColor: [219, 227, 237], lineWidth: 0.25, textColor: [30, 41, 59] },
+    head: [["Date", "Status", "In Time", "Out Time", "Working Hr", "Late Min", "Note"]],
+    body: tableRows.length ? tableRows : [["—", "No records found", "—", "—", "—", "—", "—"]],
+    headStyles: { fillColor: [241, 245, 249], textColor: [30, 41, 59], fontStyle: "bold" },
+    didParseCell: (data) => {
+      if (data.section === "body" && data.column.index === 1) {
+        const val = String(data.cell.raw).toLowerCase();
+        data.cell.styles.fontStyle = "bold";
+        if (val === "present") data.cell.styles.textColor = [22, 152, 102];
+        else if (val === "absent") data.cell.styles.textColor = [225, 81, 103];
+        else if (val === "leave") data.cell.styles.textColor = [240, 139, 41];
+      }
+    }
+  });
+
+  doc.save(`Attendance-Slip-${monthName.replace(/\s+/g, "-")}.pdf`);
+  showToast("Attendance PDF downloaded successfully!");
 }
 
 // 2. Download PDF using jsPDF (Exact Single-Page Clean A4 Format)
