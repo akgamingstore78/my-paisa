@@ -9,9 +9,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="My Paisa">
 <title>My Paisa</title>
-<link rel="manifest" href="/my-paisa/manifest.json">
-<link rel="icon" href="/my-paisa/icons/icon-192.png">
-<link rel="apple-touch-icon" href="/my-paisa/icons/icon-192.png">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -5194,52 +5194,37 @@ document
             "transaction";
 
 
-          const typeMap = {
+        const typeMap = {
 
             salary: {
-              icon:
-                "banknote",
+              icon: "banknote",
+              iconClass: "c-green",
+              amountClass: "plus",
+              prefix: "+"
+            },
 
-              iconClass:
-                "c-green",
-
-              amountClass:
-                "plus",
-
-              prefix:
-                "+"
+            other_income: {
+              icon: "circle-dollar-sign",
+              iconClass: "c-cyan",
+              amountClass: "plus",
+              prefix: "+"
             },
 
             expense: {
-              icon:
-                "credit-card",
-
-              iconClass:
-                "c-red",
-
-              amountClass:
-                "minus",
-
-              prefix:
-                "-"
+              icon: "credit-card",
+              iconClass: "c-red",
+              amountClass: "minus",
+              prefix: "-"
             },
 
             saving: {
-              icon:
-                "piggy-bank",
-
-              iconClass:
-                "c-purple",
-
-              amountClass:
-                "save",
-
-              prefix:
-                ""
+              icon: "piggy-bank",
+              iconClass: "c-purple",
+              amountClass: "save",
+              prefix: ""
             }
 
           };
-
 
           const config =
             typeMap[
@@ -6900,7 +6885,7 @@ ${escapeHTML(row.note||"-")}
 </td>
 
                   <td class="amount-green">${formatMoney(row.amount)}</td>
-<td><button type="button" class="salary-edit-btn" onclick="editSalary('${row.id}')"><i data-lucide="pencil"></i> Edit</button></td>
+<td><button type="button" class="salary-edit-btn" onclick="openTransactionModal('saving')"><i data-lucide="pencil"></i> Add / Edit</button></td>
 </tr>
 
               `)
@@ -7762,16 +7747,20 @@ function buildAttendanceCalendar(){
     let className="attendance-day";
     if(isSunday&&!status)className+=" sunday";
     if(status)className+=` ${status}`;
-    const statusText=status?status:(isSunday?"Sunday":"");
+   const statusText=status?status:(isSunday?"Sunday":"");
     const hasIn=record?.in_time&&String(record.in_time).trim()!==""&&String(record.in_time).trim()!=="-";
     const hasOut=record?.out_time&&String(record.out_time).trim()!==""&&String(record.out_time).trim()!=="-";
     const punchText=(status==="present"&&(hasIn||hasOut))
       ?`In ${hasIn?record.in_time:"-"} • Out ${hasOut?record.out_time:"-"}`
       :"";
+    const leaveLabel = status === "leave"
+      ? (record?.leave_type === "EL" ? "EL (Earn Leave)" : "CL (Casual Leave)")
+      : "";
     html+=`<div class="${className}" onclick="openAttendanceEditor('${dateString}')">
       <div class="day-number">${day}</div>
       <div class="day-status">${escapeHTML(statusText)}</div>
       ${punchText?`<div class="day-punch">${escapeHTML(punchText)}</div>`:""}
+      ${leaveLabel?`<div class="day-punch">${escapeHTML(leaveLabel)}</div>`:""}
       ${record?.note?`<div class="day-note">${escapeHTML(record.note)}</div>`:""}
     </div>`;
   }
@@ -7976,6 +7965,8 @@ function openAttendanceEditor(dateString){
   const readableDate=new Date(dateString+"T00:00:00").toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"});
   const initialStatus = existing?.status || "";
   const showPunchBox = initialStatus === "present";
+  const showLeaveBox = initialStatus === "leave";
+  const initialLeaveType = existing?.leave_type === "EL" ? "EL" : "CL";
   const inVal = formatPunchInputValue(existing?.in_time);
   const outVal = formatPunchInputValue(existing?.out_time);
 
@@ -8008,6 +7999,13 @@ function openAttendanceEditor(dateString){
             <input type="time" class="form-control" id="attendanceOutTime" value="${escapeHTML(outVal)}">
           </div>
         </div>
+        <div id="leaveTypeFields" class="form-group" style="display:${showLeaveBox?"block":"none"};">
+          <label for="attendanceLeaveType">Leave Type (EL / CL)</label>
+          <select class="form-control" id="attendanceLeaveType">
+            <option value="EL" ${initialLeaveType==="EL"?"selected":""}>EL (Earn Leave)</option>
+            <option value="CL" ${initialLeaveType==="CL"?"selected":""}>CL (Casual Leave)</option>
+          </select>
+        </div>
         <div class="form-group">
           <label>Note</label>
           <textarea class="form-control" id="attendanceNote" maxlength="200" placeholder="Example: Casual leave, medical leave, duty...">${escapeHTML(existing?.note||"")}</textarea>
@@ -8022,9 +8020,15 @@ function selectAttendanceStatus(status){
   document.getElementById("attendanceStatus").value=status;
   document.querySelectorAll(".attendance-status-btn").forEach(btn=>btn.classList.remove("active"));
   document.querySelector(`.${status}-btn`)?.classList.add("active");
+
   const punchBox = document.getElementById("punchTimeFields");
   if(punchBox){
     punchBox.style.display = status === "present" ? "grid" : "none";
+  }
+
+  const leaveBox = document.getElementById("leaveTypeFields");
+  if(leaveBox){
+    leaveBox.style.display = status === "leave" ? "block" : "none";
   }
 }
 
@@ -8050,6 +8054,30 @@ async function clearAttendance(){
   await loadAttendanceData();
 }
 
+function parseAttendanceTimeToMinutes(timeStr, isOut = false) {
+  if (!timeStr) return null;
+  const clean = String(timeStr).trim();
+  if (!clean || clean === "-" || clean === "—") return null;
+
+  const match = clean.match(/(\d{1,2})[:.](\d{2})(?:[:.](\d{2}))?\s*(am|pm)?/i);
+  if (!match) return null;
+
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const seconds = match[3] ? parseInt(match[3], 10) : 0;
+  const meridian = (match[4] || "").toLowerCase();
+
+  if (meridian === "pm" && hours < 12) {
+    hours += 12;
+  } else if (meridian === "am" && hours === 12) {
+    hours = 0;
+  } else if (!meridian && isOut && hours >= 1 && hours < 8) {
+    hours += 12;
+  }
+
+  return hours * 60 + minutes + seconds / 60;
+}
+
 function computeAttendanceMetrics(status, cleanIn, cleanOut, noteText = "") {
   if (status !== "present") {
     return { workingHr: null, lateMin: null };
@@ -8073,22 +8101,8 @@ function computeAttendanceMetrics(status, cleanIn, cleanOut, noteText = "") {
     }
   }
 
-  const parseMinutes = (tStr, isOut) => {
-    if (!tStr || tStr === "-" || tStr === "—") return null;
-    const m = String(tStr).match(/(\d{1,2})[:.](\d{2})(?:[:.](\d{2}))?/);
-    if (!m) return null;
-    let h = parseInt(m[1], 10);
-    const min = parseInt(m[2], 10);
-    const sec = m[3] ? parseInt(m[3], 10) : 0;
-    const lower = String(tStr).toLowerCase();
-    if (lower.includes("pm") && h < 12) h += 12;
-    else if (lower.includes("am") && h === 12) h = 0;
-    else if (!lower.includes("am") && !lower.includes("pm") && isOut && h < 8) h += 12;
-    return h * 60 + min + sec / 60;
-  };
-
-  const inMins = parseMinutes(resolvedIn, false);
-  const outMins = parseMinutes(resolvedOut, true);
+  const inMins = parseAttendanceTimeToMinutes(resolvedIn, false);
+  const outMins = parseAttendanceTimeToMinutes(resolvedOut, true);
 
   let workingHr = null;
   if (inMins !== null && outMins !== null) {
@@ -8138,17 +8152,21 @@ async function saveAttendance() {
     note
   );
 
-  const { error } = await db.from("attendance").upsert({
-    user_id: currentUser.id,
-    attendance_date: date,
-    status: status,
-    in_time: inTime,
-    out_time: outTime,
-    working_hr: workingHr,
-    late_min: lateMin,
-    note: note || null,
-    updated_at: new Date().toISOString()
-  }, { onConflict: "user_id,attendance_date" });
+ const leaveTypeSelect = document.getElementById("attendanceLeaveType")?.value || "CL";
+const leaveType = status === "leave" ? (leaveTypeSelect === "EL" ? "EL" : "CL") : null;
+
+const { error } = await db.from("attendance").upsert({
+  user_id: currentUser.id,
+  attendance_date: date,
+  status: status,
+  leave_type: leaveType,
+  in_time: inTime,
+  out_time: outTime,
+  working_hr: workingHr,
+  late_min: lateMin,
+  note: note || null,
+  updated_at: new Date().toISOString()
+}, { onConflict: "user_id,attendance_date" });
 
   if (error) {
     console.error(error);
@@ -9064,11 +9082,10 @@ window.viewSalarySlip=viewSalarySlip;
 window.downloadSalarySlip=downloadSalarySlip;
 window.closeSalarySlip=closeSalarySlip;
 
-if("serviceWorker" in navigator){
+if("serviceWorker" in navigator && window.location.pathname.includes("/my-paisa")){
   window.addEventListener("load",async()=>{
     try{
       await navigator.serviceWorker.register("/my-paisa/firebase-messaging-sw.js");
-      console.log("Service Worker registered.");
     }catch(error){
       console.error("Service Worker error:",error);
     }
@@ -9191,10 +9208,15 @@ function parseAttendanceRowDetails(r) {
   const dateObj = new Date(r.attendance_date + "T00:00:00");
   const formattedDate = isNaN(dateObj) ? r.attendance_date : dateObj.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
 
+ const leaveType = r.status === "leave"
+    ? (r.leave_type === "EL" ? "EL" : "CL")
+    : "—";
+
   return {
     formattedDate,
     status: (r.status || "—").toUpperCase(),
     rawStatus: r.status || "",
+    leaveType,
     inTime,
     outTime,
     workingHr,
@@ -9250,6 +9272,7 @@ function getAttendanceSlipHTML() {
       <tr>
         <td style="padding: ${cellPad}; border: 1px solid #dbe3ed; white-space: nowrap; color: #334155;">${escapeHTML(d.formattedDate)}</td>
         <td style="padding: ${cellPad}; border: 1px solid #dbe3ed; font-weight: 800; color: ${statusColor}; white-space: nowrap;">${escapeHTML(d.status)}</td>
+        <td style="padding: ${cellPad}; border: 1px solid #dbe3ed; white-space: nowrap; font-weight: 700; color: ${d.leaveType !== '—' ? '#f08b29' : '#64748b'};">${escapeHTML(d.leaveType)}</td>
         <td style="padding: ${cellPad}; border: 1px solid #dbe3ed; white-space: nowrap; color: #1e293b;">${escapeHTML(d.inTime)}</td>
         <td style="padding: ${cellPad}; border: 1px solid #dbe3ed; white-space: nowrap; color: #1e293b;">${escapeHTML(d.outTime)}</td>
         <td style="padding: ${cellPad}; border: 1px solid #dbe3ed; white-space: nowrap; font-weight: 600; color: #0f172a;">${escapeHTML(d.workingHr)}</td>
@@ -9260,9 +9283,8 @@ function getAttendanceSlipHTML() {
   }).join("");
 
   if (!attendanceRows.length) {
-    rowsHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: #888; border: 1px solid #dbe3ed;">No attendance records found for this month.</td></tr>`;
+    rowsHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px; color: #888; border: 1px solid #dbe3ed;">No attendance records found for this month.</td></tr>`;
   }
-
   return `
     <div id="attendanceSlipDocument" style="width: 100%; max-width: ${isMobile ? "100%" : "780px"}; min-width: 0; box-sizing: border-box; background: #fff; color: #1e293b; padding: ${isMobile ? "10px 8px" : "12px 18px"}; border: 1px solid #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.08); font-family: Arial, sans-serif; border-radius: 6px;">
       <div style="text-align: center; margin-bottom: 8px;">
@@ -9283,6 +9305,7 @@ function getAttendanceSlipHTML() {
             <tr style="background: #f1f5f9; color: #1e293b;">
               <th style="padding: ${cellPad}; border: 1px solid #dbe3ed;">Date</th>
               <th style="padding: ${cellPad}; border: 1px solid #dbe3ed;">Status</th>
+              <th style="padding: ${cellPad}; border: 1px solid #dbe3ed;">Leave Type</th>
               <th style="padding: ${cellPad}; border: 1px solid #dbe3ed;">In Time</th>
               <th style="padding: ${cellPad}; border: 1px solid #dbe3ed;">Out Time</th>
               <th style="padding: ${cellPad}; border: 1px solid #dbe3ed;">Working Hr</th>
@@ -9339,23 +9362,29 @@ function downloadAttendanceSlipPDF() {
 
   const tableRows = attendanceRows.map(r => {
     const d = parseAttendanceRowDetails(r);
-    return [d.formattedDate, d.status, d.inTime, d.outTime, d.workingHr, d.lateMin, d.note];
+    return [d.formattedDate, d.status, d.leaveType, d.inTime, d.outTime, d.workingHr, d.lateMin, d.note];
   });
 
   doc.autoTable({
     startY: doc.lastAutoTable.finalY + 4,
     theme: "grid",
     styles: { font: "helvetica", fontSize: 7.5, cellPadding: 1.6, lineColor: [219, 227, 237], lineWidth: 0.25, textColor: [30, 41, 59] },
-    head: [["Date", "Status", "In Time", "Out Time", "Working Hr", "Late Min", "Note"]],
-    body: tableRows.length ? tableRows : [["—", "No records found", "—", "—", "—", "—", "—"]],
+    head: [["Date", "Status", "Leave Type", "In Time", "Out Time", "Working Hr", "Late Min", "Note"]],
+    body: tableRows.length ? tableRows : [["—", "No records found", "—", "—", "—", "—", "—", "—"]],
     headStyles: { fillColor: [241, 245, 249], textColor: [30, 41, 59], fontStyle: "bold" },
     didParseCell: (data) => {
-      if (data.section === "body" && data.column.index === 1) {
-        const val = String(data.cell.raw).toLowerCase();
-        data.cell.styles.fontStyle = "bold";
-        if (val === "present") data.cell.styles.textColor = [22, 152, 102];
-        else if (val === "absent") data.cell.styles.textColor = [225, 81, 103];
-        else if (val === "leave") data.cell.styles.textColor = [240, 139, 41];
+      if (data.section === "body") {
+        if (data.column.index === 1) {
+          const val = String(data.cell.raw).toLowerCase();
+          data.cell.styles.fontStyle = "bold";
+          if (val === "present") data.cell.styles.textColor = [22, 152, 102];
+          else if (val === "absent") data.cell.styles.textColor = [225, 81, 103];
+          else if (val === "leave") data.cell.styles.textColor = [240, 139, 41];
+        }
+        if (data.column.index === 2 && (data.cell.raw === "EL" || data.cell.raw === "CL")) {
+          data.cell.styles.fontStyle = "bold";
+          data.cell.styles.textColor = [240, 139, 41];
+        }
       }
     }
   });
@@ -9363,124 +9392,60 @@ function downloadAttendanceSlipPDF() {
   doc.save(`Attendance-Slip-${monthName.replace(/\s+/g, "-")}.pdf`);
   showToast("Attendance PDF downloaded successfully!");
 }
-
-// 2. Download PDF using jsPDF (Exact Single-Page Clean A4 Format)
-function downloadAttendanceSlipPDF() {
-  if (!window.jspdf || !window.jspdf.jsPDF) {
-    showToast("PDF library not loaded.");
-    return;
+async function triggerOfflineNotification(title = "My Paisa", body = "Offline update recorded", tag = "my-paisa-offline") {
+  if (!("Notification" in window) || Notification.permission !== "granted") {
+    return false;
   }
-  const monthName = new Date(attendanceYear, attendanceMonth, 1).toLocaleDateString("en-IN", { month: "long", year: "numeric" });
 
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  try {
+    if ("serviceWorker" in navigator) {
+      const reg =
+        (await navigator.serviceWorker.getRegistration("/my-paisa/")) ||
+        (await navigator.serviceWorker.ready);
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.setTextColor(15, 23, 42);
-  doc.text("ATTENDANCE RECORD", 105, 13, { align: "center" });
-
-  doc.setFontSize(9);
-  doc.setTextColor(71, 85, 105);
-  doc.text(`MUNITIONS INDIA LIMITED (OFK) • ${monthName.toUpperCase()}`, 105, 18.5, { align: "center" });
-
-  const factoryDays = attendanceRows.filter(r => r.status !== "holiday").length;
-  const presentDays = attendanceRows.filter(r => r.status === "present").length;
-  const absentDays = attendanceRows.filter(r => r.status === "absent").length;
-  const leaveDays = attendanceRows.filter(r => r.status === "leave").length;
-
-  doc.autoTable({
-    startY: 22,
-    theme: "grid",
-    styles: { font: "helvetica", fontSize: 8.5, halign: "center", cellPadding: 2.2, lineColor: [219, 227, 237], lineWidth: 0.25 },
-    head: [["Working Days", "Present", "Absent", "Leave"]],
-    body: [[factoryDays, presentDays, absentDays, leaveDays]],
-    headStyles: { fillColor: [248, 250, 252], textColor: [100, 116, 139], fontStyle: "bold" },
-    bodyStyles: { fontStyle: "bold", textColor: [15, 23, 42] }
-  });
-
-  const tableRows = attendanceRows.map(r => {
-    const d = parseAttendanceRowDetails(r);
-    return [d.formattedDate, d.status, d.inTime, d.outTime, d.workingHr, d.lateMin, d.note];
-  });
-
-  doc.autoTable({
-    startY: doc.lastAutoTable.finalY + 4,
-    theme: "grid",
-    styles: { font: "helvetica", fontSize: 7.5, cellPadding: 1.6, lineColor: [219, 227, 237], lineWidth: 0.25, textColor: [30, 41, 59] },
-    head: [["Date", "Status", "In Time", "Out Time", "Working Hr", "Late Min", "Note"]],
-    body: tableRows.length ? tableRows : [["—", "No records found", "—", "—", "—", "—", "—"]],
-    headStyles: { fillColor: [241, 245, 249], textColor: [30, 41, 59], fontStyle: "bold" },
-    didParseCell: (data) => {
-      if (data.section === "body" && data.column.index === 1) {
-        const val = String(data.cell.raw).toLowerCase();
-        data.cell.styles.fontStyle = "bold";
-        if (val === "present") data.cell.styles.textColor = [22, 152, 102];
-        else if (val === "absent") data.cell.styles.textColor = [225, 81, 103];
-        else if (val === "leave") data.cell.styles.textColor = [240, 139, 41];
+      const targetWorker = reg?.active || reg?.waiting || reg?.installing;
+      if (targetWorker) {
+        targetWorker.postMessage({
+          type: "SHOW_OFFLINE_NOTIFICATION",
+          title,
+          body,
+          icon: "/my-paisa/icons/icon-192.png",
+          badge: "/my-paisa/icons/icon-192.png",
+          tag,
+          url: "/my-paisa/index.html"
+        });
+        return true;
       }
     }
-  });
 
-  doc.save(`Attendance-Slip-${monthName.replace(/\s+/g, "-")}.pdf`);
-  showToast("Attendance PDF downloaded successfully!");
-}
-
-// 2. Download PDF using jsPDF (Perfect single page invoice format)
-function downloadAttendanceSlipPDF() {
-  if (!window.jspdf || !window.jspdf.jsPDF) {
-    showToast("PDF library not loaded.");
-    return;
+    // Fallback if service worker active nahi hai
+    new Notification(title, {
+      body,
+      icon: "/my-paisa/icons/icon-192.png",
+      tag
+    });
+    return true;
+  } catch (err) {
+    console.error("Offline notification error:", err);
+    return false;
   }
-  const monthValue = document.getElementById("attendanceMonthInput")?.value || new Date().toISOString().slice(0, 7);
-  const monthName = new Date(monthValue + "-01").toLocaleDateString("en-IN", { month: "long", year: "numeric" });
-  
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(13);
-  doc.text("MUNITIONS INDIA LIMITED (OFK)", 105, 10, { align: "center" });
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Monthly Attendance  - ${monthName}`, 105, 15, { align: "center" });
-
-  const factoryDays = attendanceRows.filter(r => r.status !== "holiday").length;
-  const presentDays = attendanceRows.filter(r => r.status === "present").length;
-  const absentDays = attendanceRows.filter(r => r.status === "absent").length;
-  const leaveDays = attendanceRows.filter(r => r.status === "leave").length;
-
-  doc.autoTable({
-    startY: 18,
-    theme: "grid",
-    styles: { font: "helvetica", fontSize: 8, cellPadding: 2 },
-    head: [["Total Working Days", "Present Days", "Absent Days", "Leave Days"]],
-    body: [[factoryDays, presentDays, absentDays, leaveDays]],
-    headStyles: { fillColor: [51, 65, 85] }
-  });
-
-  const tableRows = attendanceRows.map(r => [
-    r.attendance_date,
-    (r.status || "-").toUpperCase(),
-    r.in_time || "-",
-    r.out_time || "-",
-    r.late_minutes ? r.late_minutes + "m" : "-",
-    r.note || "-"
-  ]);
-
-  doc.autoTable({
-    startY: doc.lastAutoTable.finalY + 4,
-    theme: "grid",
-    styles: { font: "helvetica", fontSize: 7, cellPadding: 1.5 },
-    head: [["Date", "Status", "In Time", "Out Time", "Late", "Note"]],
-    body: tableRows.length ? tableRows : [["-", "No records found", "-", "-", "-", "-"]],
-    headStyles: { fillColor: [30, 41, 59] }
-  });
-
-  doc.save(`Attendance-Slip-${monthName.replace(/\s+/g, "-")}.pdf`);
-  showToast("Attendance PDF downloaded successfully!");
 }
+firebaseMessaging.onMessage(payload => {
+    const title = payload.notification?.title || "My Paisa";
+    const body = payload.notification?.body || "You have a new notification.";
+
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification(title, {
+        body,
+        icon: "/my-paisa/icons/icon-192.png"
+      });
+    }
+
+    if (typeof showToast === "function") {
+      showToast(body);
+    }
+  });
 </script>
 
 </body>
-</html>0. m,         
+</html>   

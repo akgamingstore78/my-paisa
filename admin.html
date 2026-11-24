@@ -138,13 +138,82 @@ svg{display:block}
 .b-orange{color:#d88328;background:#fff4e7}
 .b-purple{color:#6a56dd;background:#f0edff}
 .b-blue{color:#3e67e5;background:#edf3ff}
-.auto-attendance-card{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 18px;margin-bottom:18px;border:1px solid rgba(78,120,255,.10);border-radius:18px;background:rgba(255,255,255,.88);box-shadow:var(--shadow-sm)}
-.auto-attendance-info strong{display:block;font-size:13px;color:#253956}
-.auto-attendance-info small{display:block;margin-top:4px;color:#8290a5;font-size:9px;line-height:1.5}
-.auto-toggle{position:relative;width:52px;height:28px;flex:0 0 52px;border:0;border-radius:999px;background:#dce4ef;transition:.2s ease}
-.auto-toggle span{position:absolute;left:4px;top:4px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 3px 9px rgba(30,48,76,.18);transition:.2s ease}
+.att-head-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.att-head-row h2{font-size:24px;letter-spacing:-.7px}
+.att-head-row p{margin-top:3px;color:#8190a5;font-size:11px}
+.mini-auto-wrap{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid rgba(78,120,255,.16);border-radius:11px;background:rgba(255,255,255,.95);box-shadow:var(--shadow-sm)}
+.mini-auto-label{font-size:11px;font-weight:700;color:#253956;white-space:nowrap}
+.mini-auto-state{font-size:9px;font-weight:800;padding:2px 6px;border-radius:999px}
+.mini-auto-state.on{color:#168c60;background:#e8fbf2}
+.mini-auto-state.off{color:#75829b;background:#eef3f9}
+.auto-toggle{position:relative;width:36px;height:20px;flex:0 0 36px;border:0;border-radius:999px;background:#dce4ef;transition:.2s ease}
+.auto-toggle span{position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(30,48,76,.18);transition:.2s ease}
 .auto-toggle.on{background:linear-gradient(135deg,#20bfbf,#4e78ff)}
-.auto-toggle.on span{transform:translateX(24px)}
+.auto-toggle.on span{transform:translateX(16px)}
+
+.att-top-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.att-box{padding:11px 13px;border:1px solid rgba(71,95,133,.12);border-radius:14px;background:rgba(255,255,255,.92);box-shadow:var(--shadow-sm)}
+.att-box-title{font-size:10px;font-weight:800;color:#4a5c78;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;text-transform:uppercase;letter-spacing:.3px}
+
+.quad-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.quad-cell{padding:7px 10px;border-radius:9px;background:#f8fbff;border:1px solid rgba(75,98,136,.09);display:flex;align-items:center;justify-content:space-between;gap:6px}
+.quad-cell span{font-size:10px;font-weight:700;color:#60718d}
+.quad-cell strong{font-size:15px;font-weight:800;letter-spacing:-.4px}
+.q-present strong{color:#1cad74}
+.q-absent strong{color:#ef5369}
+.q-leave strong{color:#f08b29}
+.q-holiday strong{color:#785af0}.quad-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.quad-cell{padding:7px 10px;border-radius:9px;background:#f8fbff;border:1px solid rgba(75,98,136,.09);display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;text-align:left;transition:.15s ease}
+.quad-cell:hover{border-color:#7ea2ff;background:#f2f6ff}
+.quad-cell span{font-size:10px;font-weight:700;color:#60718d}
+.quad-cell strong{font-size:15px;font-weight:800;letter-spacing:-.4px}
+.q-present strong{color:#1cad74}
+.q-absent strong{color:#ef5369}
+.q-leave strong{color:#f08b29}
+.q-holiday strong{color:#785af0}
+.quad-cell.active.q-present{background:#ecfff6;border:1.5px solid #1cad74}
+.quad-cell.active.q-absent{background:#fff2f4;border:1.5px solid #ef5369}
+.quad-cell.active.q-leave{background:#fff6eb;border:1.5px solid #f08b29}
+.quad-cell.active.q-holiday{background:#f3f0ff;border:1.5px solid #785af0}
+
+.overview-detail-box{margin-bottom:16px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.94);border:1px solid rgba(75,98,136,.12);box-shadow:var(--shadow-sm)}
+.overview-detail-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.overview-detail-title{font-size:11px;font-weight:800;color:#253956}
+.overview-detail-close{padding:3px 9px;border-radius:7px;border:1px solid #dce6f3;background:#f8fbff;color:#253956;font-size:10px;font-weight:700}
+.overview-chips-wrap{display:flex;flex-wrap:wrap;gap:6px}
+.overview-date-chip{padding:5px 9px;border-radius:8px;background:#f8fbff;border:1px solid rgba(75,98,136,.12);font-size:10px;font-weight:700;color:#253956;display:inline-flex;align-items:center;gap:6px}
+
+.leave-bal-box{cursor:pointer;transition:.18s ease;display:flex;flex-direction:column;justify-content:space-between}
+.leave-bal-box:hover{border-color:rgba(78,120,255,.35)}
+.leave-types-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.leave-type-card{padding:8px 10px;border-radius:9px;background:#f8fbff;border:1px solid rgba(75,98,136,.09);display:flex;align-items:center;justify-content:space-between;gap:6px}
+.leave-type-card small{font-size:10px;font-weight:700;color:#60718d}
+.leave-type-card strong{font-size:15px;font-weight:800;color:#253956}
+.leave-detail-strip{margin-top:8px;padding:6px 9px;border-radius:8px;background:#f2f6ff;border:1px solid rgba(78,120,255,.16);color:#2f54d8;font-size:10px;font-weight:700}
+
+.cal-year-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:7px}
+.cal-year-badge{font-size:11px;font-weight:800;color:#33465f;background:#f2f6fc;border:1px solid #dce6f3;padding:2px 8px;border-radius:7px}
+.cal-year-badge.current-yr{color:#1d4ed8;background:#e8f0ff;border-color:#93b4ff}
+.cal-nav-btns{display:flex;gap:4px}
+.cal-arrow-btn{width:22px;height:22px;border:1px solid #dce6f3;border-radius:6px;background:#f8fbff;color:#253956;font-size:11px;font-weight:800;display:grid;place-items:center}
+.cal-months-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.cal-month-sq{padding:5px 3px;border-radius:7px;border:1px solid rgba(75,98,136,.11);background:#f9fbff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:9px;font-weight:800;color:#253956;transition:.15s ease}
+.cal-month-sq:hover{border-color:#7ea2ff;background:#f2f6ff}
+.cal-month-p{font-size:8.5px;font-weight:800;color:#1cad74}
+.cal-month-sq.active{background:#f2f6ff;border:1.5px solid #4e78ff;color:#1d4ed8}
+.cal-month-sq.active .cal-month-p{color:#168c60}
+
+.month-dates-strip{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:12px;padding:8px 10px;border-radius:10px;background:#f8fbff;border:1px solid rgba(75,98,136,.10)}
+.month-dates-label{font-size:10px;font-weight:800;color:#4a5c78;margin-right:2px}
+.date-chip-btn{padding:3px 8px;border-radius:6px;border:1px solid #dce6f3;background:#fff;color:#253956;font-size:10px;font-weight:700}
+.date-chip-btn:hover{border-color:#4e78ff;color:#2f54d8}
+.date-chip-btn.active{background:#e8f0ff;border-color:#4e78ff;color:#1d4ed8;font-weight:800}
+.date-chip-clear{padding:3px 8px;border-radius:6px;border:1px solid #ffd5dc;background:#fff5f7;color:#d94b61;font-size:10px;font-weight:700}
+
+@media(max-width:1080px){
+.att-top-grid{grid-template-columns:1fr}
+.cal-months-grid{grid-template-columns:repeat(4,1fr)}
+}
 .auth-screen{position:fixed;inset:0;z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at 15% 15%,rgba(56,189,248,.18),transparent 30%),radial-gradient(circle at 85% 80%,rgba(128,104,245,.14),transparent 30%),linear-gradient(135deg,#f7fbff,#eef6ff,#faf8ff)}
 .auth-screen.hidden{display:none}
 .auth-card{width:100%;max-width:410px;padding:30px;background:rgba(255,255,255,.94);border:1px solid rgba(77,96,133,.10);border-radius:28px;box-shadow:0 30px 80px rgba(39,66,107,.14)}
@@ -400,6 +469,11 @@ let savingRows=[];
 let attendanceRows=[];
 let autoAttendanceEnabled=false;
 let activeSection="dashboard";
+let attendanceCalendarYear=new Date().getFullYear();
+let selectedAttendanceMonth="";
+let selectedAttendanceDate="";
+let selectedOverviewStatus="";
+let leaveDetailExpanded=false;
 let adminReportType="month";
 let adminReportMonth=new Date().toISOString().slice(0,7);
 let adminReportYear=String(new Date().getFullYear());
@@ -1482,13 +1556,50 @@ row=>
 row.status==="holiday"
 ).length;
 
+const leaveStats=
+getLeaveBalanceSummary(attendanceRows);
+
+const currentSystemYear=
+new Date().getFullYear();
+
+const monthNames=
+["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+const activeMonth=
+selectedAttendanceMonth || document.getElementById("attendanceMonth")?.value || "";
+
+const calendarHtml=
+monthNames.map((mName,idx)=>{
+const mNum=String(idx+1).padStart(2,"0");
+const ym=`${attendanceCalendarYear}-${mNum}`;
+const count=attendanceRows.filter(r=>String(r.attendance_date||"").startsWith(ym)&&r.status==="present").length;
+const isActive=activeMonth===ym;
+return `
+<button
+type="button"
+class="cal-month-sq ${isActive?"active":""}"
+onclick="selectAttendanceCalendarMonth('${ym}')"
+title="${mName} ${attendanceCalendarYear}"
+>
+<span>${mName}</span>
+<small class="cal-month-p">${count}P</small>
+</button>
+`;
+}).join("");
+
+const monthDatesHtml=
+buildMonthDatesStripHtml(activeMonth);
+
+const overviewDetailHtml=
+buildOverviewStatusDetailHtml(selectedOverviewStatus);
+
 document
 .getElementById(
 "content"
 )
 .innerHTML=`
 
-<div class="page-head">
+<div class="att-head-row">
 
 <div>
 <h2>Attendance</h2>
@@ -1497,21 +1608,9 @@ Manage automatic and manual attendance.
 </p>
 </div>
 
-</div>
-
-<div class="auto-attendance-card">
-
-<div class="auto-attendance-info">
-<strong>
-Auto Attendance
-</strong>
-<small>
-${autoAttendanceEnabled
-?"ON — Blank working days automatically become Present. Sundays and existing records are skipped."
-:"OFF — Attendance will remain manual."}
-</small>
-</div>
-
+<div class="mini-auto-wrap">
+<span class="mini-auto-label">Auto Attendance</span>
+<span class="mini-auto-state ${autoAttendanceEnabled?"on":"off"}">${autoAttendanceEnabled?"ON":"OFF"}</span>
 <button
 type="button"
 class="auto-toggle ${autoAttendanceEnabled?"on":""}"
@@ -1520,32 +1619,76 @@ aria-label="Toggle automatic attendance"
 >
 <span></span>
 </button>
+</div>
 
 </div>
 
-<div class="stats-grid">
+<div class="att-top-grid">
 
-<div class="stat-card s1">
-<small>Present</small>
+<div class="att-box">
+<div class="att-box-title">
+<span>Attendance Overview</span>
+</div>
+<div class="quad-grid">
+<button type="button" class="quad-cell q-present ${selectedOverviewStatus==="present"?"active":""}" onclick="selectOverviewStatus('present')">
+<span>Present</span>
 <strong>${present}</strong>
-</div>
-
-<div class="stat-card s2">
-<small>Absent</small>
+</button>
+<button type="button" class="quad-cell q-absent ${selectedOverviewStatus==="absent"?"active":""}" onclick="selectOverviewStatus('absent')">
+<span>Absent</span>
 <strong>${absent}</strong>
-</div>
-
-<div class="stat-card s3">
-<small>Leave</small>
+</button>
+<button type="button" class="quad-cell q-leave ${selectedOverviewStatus==="leave"?"active":""}" onclick="selectOverviewStatus('leave')">
+<span>Leave</span>
 <strong>${leave}</strong>
-</div>
-
-<div class="stat-card s4">
-<small>Holiday</small>
+</button>
+<button type="button" class="quad-cell q-holiday ${selectedOverviewStatus==="holiday"?"active":""}" onclick="selectOverviewStatus('holiday')">
+<span>Holiday</span>
 <strong>${holiday}</strong>
+</button>
+</div>
+</div>
+
+<div class="att-box leave-bal-box" onclick="toggleLeaveDetailBox()">
+<div class="att-box-title">
+<span>Leave Balance (EL / CL)</span>
+<span>${leaveDetailExpanded?"Hide":"Click"}</span>
+</div>
+<div class="leave-types-grid">
+<div class="leave-type-card">
+<small>EL</small>
+<strong>${leaveStats.elRemaining}</strong>
+</div>
+<div class="leave-type-card">
+<small>CL</small>
+<strong>${leaveStats.clRemaining}</strong>
+</div>
+</div>
+${leaveDetailExpanded?`
+<div class="leave-detail-strip">
+Earn Leave (EL): ${leaveStats.elRemaining} available • Casual Leave (CL): ${leaveStats.clRemaining} available (User side synced)
+</div>
+`:""}
+</div>
+
+<div class="att-box">
+<div class="cal-year-head">
+<span class="cal-year-badge ${attendanceCalendarYear===currentSystemYear?"current-yr":""}">
+${attendanceCalendarYear}
+</span>
+<div class="cal-nav-btns">
+<button type="button" class="cal-arrow-btn" onclick="changeAttendanceCalendarYear(-1)" title="Previous Year">&lt;</button>
+<button type="button" class="cal-arrow-btn" onclick="changeAttendanceCalendarYear(1)" title="Next Year">&gt;</button>
+</div>
+</div>
+<div class="cal-months-grid">
+${calendarHtml}
+</div>
 </div>
 
 </div>
+
+${overviewDetailHtml}
 
 <div class="panel">
 
@@ -1554,14 +1697,22 @@ aria-label="Toggle automatic attendance"
 ${filterHtml("attendance")}
 </div>
 
+<div id="attendanceMonthDatesWrap">
+${monthDatesHtml}
+</div>
+
 ${renderAttendanceTable()}
 
 </div>
 
 `;
 
+if(activeMonth){
+const mInput=document.getElementById("attendanceMonth");
+if(mInput)mInput.value=activeMonth;
 }
 
+}
 function applyFilter(type){
 
 const table=
@@ -2722,6 +2873,9 @@ toTimeInputValue(row.in_time);
 const outInputVal=
 toTimeInputValue(row.out_time);
 
+const currentLeaveType=
+row.leave_type || (row.status==="leave" ? detectLeaveTypeLabel(row) : "");
+
 html=`
 
 <div class="form-grid">
@@ -2807,6 +2961,25 @@ Holiday
 </select>
 
 </div>
+
+</div>
+
+<div class="form-group">
+
+<label>
+Leave Type (EL / CL)
+</label>
+
+<select
+class="form-control"
+id="editLeaveType"
+>
+
+<option value="" ${!currentLeaveType?"selected":""}>-</option>
+<option value="EL" ${currentLeaveType==="EL"?"selected":""}>EL (Earn Leave)</option>
+<option value="CL" ${currentLeaveType==="CL"?"selected":""}>CL (Casual Leave)</option>
+
+</select>
 
 </div>
 
@@ -3051,6 +3224,19 @@ document
 )
 .value;
 
+const leaveTypeRaw=
+document
+.getElementById(
+"editLeaveType"
+)
+?.value
+?.trim() || "";
+
+const leaveTypeVal=
+statusVal==="leave"
+? (leaveTypeRaw || "CL")
+: (leaveTypeRaw || null);
+
 const noteVal=
 document
 .getElementById(
@@ -3103,6 +3289,8 @@ document
 .value,
 status:
 statusVal,
+leave_type:
+leaveTypeVal,
 in_time:
 inTime,
 out_time:
@@ -3500,16 +3688,21 @@ return {inTime,outTime,workingHr,lateMin};
 
 function renderAttendanceTable(){
 const query=(document.getElementById("attendanceSearch")?.value || "").toLowerCase().trim();
-const month=document.getElementById("attendanceMonth")?.value || "";
+const month=selectedAttendanceMonth || document.getElementById("attendanceMonth")?.value || "";
 const rows=attendanceRows.filter(row=>{
-const matchesMonth=!month || String(row.attendance_date || "").startsWith(month);
+const dStr=String(row.attendance_date || "");
+const matchesMonth=!month || dStr.startsWith(month);
 if(!matchesMonth)return false;
+const matchesDate=!selectedAttendanceDate || dStr===selectedAttendanceDate;
+if(!matchesDate)return false;
 if(!query)return true;
 const metrics=getAttendanceRowDisplay(row);
+const leaveTypeVal=row.status==="leave"?detectLeaveTypeLabel(row):"-";
 const hay=[
 row.attendance_date,
 dateFmt(row.attendance_date),
 row.status,
+leaveTypeVal,
 metrics.inTime,
 metrics.outTime,
 metrics.workingHr,
@@ -3524,12 +3717,16 @@ rows,
 "attendance",
 row=>{
 const metrics=getAttendanceRowDisplay(row);
+const leaveTypeCell=row.status==="leave"
+? `<span class="badge b-orange">${esc(detectLeaveTypeLabel(row))}</span>`
+: "-";
 return `
 <td>${dateFmt(row.attendance_date)}</td>
 <td><span class="badge ${row.status==="present"?"b-green":row.status==="absent"?"b-red":row.status==="holiday"?"b-purple":"b-orange"}">${cap(row.status)}</span></td>
 <td>${esc(metrics.inTime)}</td>
 <td>${esc(metrics.outTime)}</td>
 <td><strong>${esc(metrics.workingHr)}</strong></td>
+<td>${leaveTypeCell}</td>
 <td><span class="${metrics.lateMin!=="-"?"amount-red":""}">${esc(metrics.lateMin)}</span></td>
 <td>${esc(row.note || "-")}</td>
 `;
@@ -3540,12 +3737,188 @@ return `
 <th>In Time</th>
 <th>Out Time</th>
 <th>Working Hr</th>
+<th>Leave Type</th>
 <th>Late Min</th>
 <th>Note</th>
 `
 );
 }
 
+function detectLeaveTypeLabel(row){
+const raw=`${row.leave_type||""} ${row.note||""}`.toUpperCase();
+if(/\bEL\b|EARN\s*LEAVE/.test(raw))return "EL";
+if(/\bCL\b|CASUAL\s*LEAVE/.test(raw))return "CL";
+return "CL / EL";
+}
+
+function formatDateMonthYearParts(dateStr){
+if(!dateStr)return {day:"-",monthName:"-",year:"-"};
+const parts=String(dateStr).split("-");
+const y=Number(parts[0]);
+const m=Number(parts[1]);
+const d=Number(parts[2]);
+if(!y || !m || !d)return {day:dateStr,monthName:"",year:""};
+const dt=new Date(y,m-1,d);
+const monthName=dt.toLocaleDateString("en-IN",{month:"short"});
+return {
+day:String(d).padStart(2,"0"),
+monthName,
+year:String(y)
+};
+}
+
+function selectOverviewStatus(statusKey){
+selectedOverviewStatus=selectedOverviewStatus===statusKey?"":statusKey;
+renderAttendance();
+lucide.createIcons();
+}
+
+function buildOverviewStatusDetailHtml(statusKey){
+if(!statusKey)return "";
+
+const matchingRows=attendanceRows.filter(r=>r.status===statusKey);
+const titleLabel=cap(statusKey);
+
+if(!matchingRows.length){
+return `
+<div class="overview-detail-box">
+<div class="overview-detail-head">
+<span class="overview-detail-title">${esc(titleLabel)} Dates (0)</span>
+<button type="button" class="overview-detail-close" onclick="selectOverviewStatus('${esc(statusKey)}')">Close</button>
+</div>
+<div class="empty" style="padding:14px 8px"><strong>No ${esc(titleLabel)} records found</strong></div>
+</div>
+`;
+}
+
+const chipsHtml=matchingRows.map(r=>{
+const p=formatDateMonthYearParts(r.attendance_date);
+const leaveTag=statusKey==="leave"
+? `<span class="leave-kind-tag">${esc(detectLeaveTypeLabel(r))}</span>`
+: "";
+const extraNote=statusKey==="holiday" && r.note
+? `<span>• ${esc(r.note)}</span>`
+: "";
+return `
+<span class="overview-date-chip">
+<strong>${esc(p.day)} ${esc(p.monthName)} ${esc(p.year)}</strong>
+${leaveTag}
+${extraNote}
+</span>
+`;
+}).join("");
+
+return `
+<div class="overview-detail-box">
+<div class="overview-detail-head">
+<span class="overview-detail-title">${esc(titleLabel)} Dates (${matchingRows.length}) — Date • Month • Year${statusKey==="leave"?" • Leave Type":""}</span>
+<button type="button" class="overview-detail-close" onclick="selectOverviewStatus('${esc(statusKey)}')">Close</button>
+</div>
+<div class="overview-chips-wrap">
+${chipsHtml}
+</div>
+</div>
+`;
+}
+
+function getLeaveBalanceSummary(){
+const elRemaining=Number(window.userLeaveBalance?.el ?? 0);
+const clRemaining=Number(window.userLeaveBalance?.cl ?? 0);
+return{
+elRemaining,
+clRemaining
+};
+}
+
+function toggleLeaveDetailBox(){
+leaveDetailExpanded=!leaveDetailExpanded;
+renderAttendance();
+lucide.createIcons();
+}
+
+function changeAttendanceCalendarYear(delta){
+attendanceCalendarYear+=delta;
+selectedAttendanceDate="";
+renderAttendance();
+lucide.createIcons();
+}
+
+function selectAttendanceCalendarMonth(ym){
+if(selectedAttendanceMonth===ym){
+selectedAttendanceMonth="";
+selectedAttendanceDate="";
+const monthInput=document.getElementById("attendanceMonth");
+if(monthInput)monthInput.value="";
+}else{
+selectedAttendanceMonth=ym;
+selectedAttendanceDate="";
+const monthInput=document.getElementById("attendanceMonth");
+if(monthInput)monthInput.value=ym;
+}
+renderAttendance();
+lucide.createIcons();
+}
+
+function selectAttendanceSpecificDate(dateStr){
+selectedAttendanceDate=selectedAttendanceDate===dateStr?"":dateStr;
+applyFilter("attendance");
+const datesWrap=document.getElementById("attendanceMonthDatesWrap");
+if(datesWrap){
+const activeMonth=selectedAttendanceMonth || document.getElementById("attendanceMonth")?.value || "";
+datesWrap.innerHTML=buildMonthDatesStripHtml(activeMonth);
+}
+}
+
+function clearAttendanceSpecificDate(){
+selectedAttendanceDate="";
+applyFilter("attendance");
+const datesWrap=document.getElementById("attendanceMonthDatesWrap");
+if(datesWrap){
+const activeMonth=selectedAttendanceMonth || document.getElementById("attendanceMonth")?.value || "";
+datesWrap.innerHTML=buildMonthDatesStripHtml(activeMonth);
+}
+}
+
+function buildMonthDatesStripHtml(ym){
+if(!ym)return "";
+const [yStr,mStr]=ym.split("-");
+const year=Number(yStr);
+const monthIdx=Number(mStr)-1;
+if(!year || monthIdx<0 || monthIdx>11)return "";
+
+const daysInMonth=new Date(year,monthIdx+1,0).getDate();
+const recordMap=new Map(
+attendanceRows
+.filter(r=>String(r.attendance_date||"").startsWith(ym))
+.map(r=>[String(r.attendance_date),r])
+);
+
+const chips=[];
+for(let d=1;d<=daysInMonth;d++){
+const dd=String(d).padStart(2,"0");
+const fullDate=`${ym}-${dd}`;
+const hasRec=recordMap.has(fullDate);
+const isSel=selectedAttendanceDate===fullDate;
+chips.push(`
+<button
+type="button"
+class="date-chip-btn ${isSel?"active":""}"
+onclick="selectAttendanceSpecificDate('${fullDate}')"
+title="${hasRec?`Record: ${recordMap.get(fullDate).status}`:"No record"}"
+>
+${dd}-${mStr}
+</button>
+`);
+}
+
+return `
+<div class="month-dates-strip">
+<span class="month-dates-label">Dates (${ym}):</span>
+${chips.join("")}
+${selectedAttendanceDate?`<button type="button" class="date-chip-clear" onclick="clearAttendanceSpecificDate()">Show All Dates</button>`:""}
+</div>
+`;
+}
 </script>
 
 </body>
